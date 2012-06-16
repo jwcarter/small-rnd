@@ -6,6 +6,12 @@
 #include "rnd.h"
 
 #define NUM_ROLLS 10000000
+
+#define U_MAX 4294967295UL
+#define D 0.00001
+#define D2 (2*(D))
+#define OPEN_DBL(x) ((((double)x)+D)/((double)U_MAX+D2))
+
 static void print_dist(int min, int max, int dist[])
 {
 	int i,j,k;
@@ -39,6 +45,11 @@ void rnd_test(rnd_t rnd)
 		dist[i] = 0;
 
 	printf("Testing the random number generator\n");
+	printf("Value for D (%.15f) is %s\n",D,
+					((double)U_MAX > ((double)U_MAX-D)) ? "good" : "bad");
+	printf("rnd_double min: %.15f\n",OPEN_DBL(0));
+	printf("rnd_double max: %.15f\n",OPEN_DBL(U_MAX));
+	printf("\n");
 	printf("Testing rnd_int\n");
 	total = 0;
 	start = clock();
