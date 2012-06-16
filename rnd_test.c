@@ -53,6 +53,38 @@ void rnd_test(rnd_t rnd)
 					((double)(stop-start)/CLOCKS_PER_SEC));
 	print_dist(0, 19, dist);
 
+	printf("Testing rnd_roll\n");
+	for (i=0; i < 20; i++)
+		dist[i] = 0;
+	total = 0;
+	start = clock();
+	for (i=0; i < NUM_ROLLS; i++) {
+		r = rnd_roll(rnd,3,6);
+		dist[r]++;
+		total += r;
+	}
+	stop = clock();
+	printf("Range: %d-%d: Avg=%5.3f (Expected: %5.3f) (Time: %5.3f)\n", 
+					3, 18, (double)total/NUM_ROLLS, (3+18)/2.0, 
+					((double)(stop-start)/CLOCKS_PER_SEC));
+	print_dist(0, 19, dist);
+
+	printf("Testing rnd_roll_mid\n");
+	for (i=0; i < 20; i++)
+		dist[i] = 0;
+	total = 0;
+	start = clock();
+	for (i=0; i < NUM_ROLLS; i++) {
+		r = rnd_roll_mid(rnd,18);
+		dist[r]++;
+		total += r;
+	}
+	stop = clock();
+	printf("Range: %d-%d: Avg=%5.3f (Expected: %5.3f) (Time: %5.3f)\n", 
+					1, 18, (double)total/NUM_ROLLS, (1+18)/2.0, 
+					((double)(stop-start)/CLOCKS_PER_SEC));
+	print_dist(0, 19, dist);
+
 	printf("Testing rnd_dist_uniform\n");
 	for (i=0; i < 20; i++)
 		dist[i] = 0;

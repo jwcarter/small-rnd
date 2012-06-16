@@ -1,7 +1,5 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include <math.h>
-#include <float.h>
 
 /* 32 bit Multiply-With-Carry (MWC) with Lag 2
  *
@@ -10,7 +8,7 @@
  * Using the TestU01 library from
  * http://www.iro.umontreal.ca/~simardr/testu01/tu01.html
  * Passes all of the tests of SmallCrush, FIPS-140-2, and pseudoDIEHARD
- * Passes all of the tests of Crush and Bigcrush
+ * Passes all of the tests of Crush and BigCrush
  *
  * Criteria for MWCs:
  * For a given A with,
@@ -61,8 +59,8 @@ struct rnd *rnd_new()
 void rnd_init(struct rnd *rnd, unsigned long seed)
 {
 	rnd->s1 = seed;
-	rnd->s2 = 1405695061UL; /* Prime */
-	rnd->c = 96557UL;       /* Prime */
+	rnd->s2 = 1405695061UL; /* Prime - not that it matters */
+	rnd->c = 96557UL;       /* Prime - not that it matters */
 	next(rnd);
 	next(rnd);
 }
@@ -77,84 +75,47 @@ void rnd_free(struct rnd *rnd)
  * Random Numbers
  */
 
-#define RND_MAX 4294967295UL
-#define HIGH_OPEN (1.0-DBL_EPSILON)
-#define LOW_OPEN DBL_EPSILON
-
 /*
- * Uniform Distribution
+ * All returned doubles are on an open interval.
+ * For interval (0,1):
+ * Min: 0.00000000000000232831
+ * Max: 0.99999999999999766853
+ * There is no round off when generating unsigned ints from 0 - U_MAX
+ * like so: (unsigned)floor(OPEN_DBL(next(rnd))*(U_MAX+1))
+ * Min: 0
+ * Max: U_MAX
+ * Because there is no round off, don't need to generate closed intervals
  */
 
-double rnd_closed(struct rnd *rnd)
+#define U_MAX 4294967295UL
+#define D 0.00001
+#define D2 (2*(D))
+#define OPEN_DBL(x) ((((double)x)+D)/((double)U_MAX+D2))
+
+unsigned rnd_unsigned(struct rnd *rnd)
 {
-/* Return double [0,1] in continuous uniform distribution */
-	return (double)next(rnd)/(double)RND_MAX;
+	return next(rnd);
 }
 
 double rnd_double(struct rnd *rnd)
 {
-/* Return double [0,1) in continuous uniform distribution */
-	return (double)next(rnd)/(double)RND_MAX*HIGH_OPEN;
-}
-
-double rnd_open(struct rnd *rnd)
-{
 /* Return double (0,1) in continuous uniform distribution */
-	return (double)next(rnd)/(double)RND_MAX*(HIGH_OPEN-LOW_OPEN)+LOW_OPEN;
-}
-
-/*
- * Triangular Distribution
- */
-
-double rnd_closed_2(struct rnd *rnd)
-{
-/* Return double [0,2] in continuous triangular distribution */
-	return ((double)next(rnd)+(double)next(rnd))/(double)RND_MAX;
+	return OPEN_DBL(next(rnd));
 }
 
 double rnd_double_2(struct rnd *rnd)
 {
-/* Return double [0,2) in continuous triangular distribution */
-	return ((double)next(rnd)+(double)next(rnd))/(double)RND_MAX*HIGH_OPEN;
-}
-
-double rnd_open_2(struct rnd *rnd)
-{
 /* Return double (0,2) in continuous triangular distribution */
-	return ((double)next(rnd)+(double)next(rnd))/(double)RND_MAX*
-			(HIGH_OPEN-LOW_OPEN)+LOW_OPEN;
-}
-
-/*
- * Irwin Hall Distribution
- */
-
-double rnd_closed_n(struct rnd *rnd, unsigned n)
-{
-/* Return double [0,n] in continuous irwin hall distribution */
-	double x = 0;
-	while (n-- > 0)
-		x += next(rnd);
-	return (double)x/(double)RND_MAX;
+	return OPEN_DBL(next(rnd)+next(rnd));
 }
 
 double rnd_double_n(struct rnd *rnd, unsigned n)
-{
-/* Return double [0,n) in continuous irwin hall distribution */
-	double x = 0;
-	while (n-- > 0)
-		x += next(rnd);
-	return (double)x/(double)RND_MAX*HIGH_OPEN;
-}
-
-double rnd_open_n(struct rnd *rnd, unsigned n)
 {
 /* Return double (0,n) in continuous irwin hall distribution */
 	double x = 0;
 	while (n-- > 0)
 		x += next(rnd);
-	return (double)x/(double)RND_MAX*(HIGH_OPEN-LOW_OPEN)+LOW_OPEN;
+	return OPEN_DBL(x);
 }
 
 /*

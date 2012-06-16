@@ -11,19 +11,19 @@
 double rnd_dist_uniform(rnd_t rnd, double low, double high)
 {
 /* Return double (low,high) in uniform distribution */
-	return rnd_open(rnd)*(high-low)+low;
+	return rnd_double(rnd)*(high-low)+low;
 }
 
 double rnd_dist_triangle(rnd_t rnd, double low, double high)
 {
 /* return double (low,high) in triangular distribution */
-	return rnd_open_2(rnd)/2.0*(high-low)+low;
+	return rnd_double_2(rnd)/2.0*(high-low)+low;
 }
 
 double rnd_dist_triangle_left(rnd_t rnd, double low, double high)
 {
 /* Return double (low,high) in left half of triangular distribution */
-	double x = rnd_open_2(rnd)-1;
+	double x = rnd_double_2(rnd)-1;
 	x = (x < 0) ? x : -x;
 	return x*(high-low)+low;
 }
@@ -31,7 +31,7 @@ double rnd_dist_triangle_left(rnd_t rnd, double low, double high)
 double rnd_dist_triangle_right(rnd_t rnd, double low, double high)
 {
 /* Return double (low,high) in right half of triangular distribution */
-	double x = rnd_open_2(rnd)-1;
+	double x = rnd_double_2(rnd)-1;
 	x = (x < 0) ? -x : x;
 	return x*(high-low)+low;
 }
@@ -43,7 +43,7 @@ double rnd_dist_triangle_skewed(rnd_t rnd, double low, double high,
  *   Peak of distribution is at mode.
  *   (mode-low) and (high-mode) are not necessarily equal
 */
-	double x = rnd_open_2(rnd)-1;
+	double x = rnd_double_2(rnd)-1;
 	double v =  (x < 0) ? (mode-low) : (high-mode);
 	return v*x+mode;
 }
@@ -51,7 +51,7 @@ double rnd_dist_triangle_skewed(rnd_t rnd, double low, double high,
 double rnd_dist_normal(rnd_t rnd, double mean, double sd)
 {
 /* Return double (-6*sd+mean,6*sd+mean) in (roughly) normal distribution */
-	return rnd_open_n(rnd,12)*sd-6.0*sd+mean;
+	return rnd_double_n(rnd,12)*sd-6.0*sd+mean;
 }
 
 double rnd_dist_irwin_hall(rnd_t rnd, unsigned n, double low, double high)
@@ -63,14 +63,14 @@ double rnd_dist_irwin_hall(rnd_t rnd, unsigned n, double low, double high)
  *   n=2: triangle distribution
  *   n=12: normal distribution (approximate)
 */
-	return rnd_open_n(rnd,n)/(double)n*(high-low)+low;
+	return rnd_double_n(rnd,n)/(double)n*(high-low)+low;
 }
 
 double rnd_dist_irwin_hall_left(rnd_t rnd, unsigned n, double low, 
 				double high)
 {
 /* Return double (low,high) in left half of Irwin-Hall distribution */
-	double x = rnd_open_n(rnd,n)/(double)n*2.0-1.0;
+	double x = rnd_double_n(rnd,n)/(double)n*2.0-1.0;
 	x = (x < 0) ? x : -x;
 	return (x+1.0)*(high-low)+low;
 }
@@ -79,7 +79,7 @@ double rnd_dist_irwin_hall_right(rnd_t rnd, unsigned n, double low,
 				double high)
 {
 /* Return double (low,high) in right half of Irwin-Hall distribution */
-	double x = rnd_open_n(rnd,n)/(double)n*2.0-1.0;
+	double x = rnd_double_n(rnd,n)/(double)n*2.0-1.0;
 	x = (x < 0) ? -x : x;
 	return x*(high-low)+low;
 }
@@ -97,7 +97,8 @@ int rnd_int(struct rnd *rnd, int low, int high)
 unsigned rnd_roll(rnd_t rnd, unsigned n, unsigned s)
 {
 /* Return unsigned [n,n*s] from rolling s sided die n times */
-	return (unsigned)floor(rnd_double_n(rnd,n)*((double)s-1.0))+n;
+	return (unsigned)floor(rnd_double_n(rnd,n)/(double)n*
+					(((double)s-1.0)*(double)n+1.0))+n;
 }
 
 unsigned rnd_roll_mid(rnd_t rnd, unsigned s)
@@ -113,5 +114,5 @@ unsigned rnd_roll_mid(rnd_t rnd, unsigned s)
 		x = (x1 < x3) ? x1 : x3;
 	else
 		x = (x1 < x2) ? x1 : x2;
-	return (unsigned)floor(x*((double)s-1.0))+1;
+	return (unsigned)floor(x*((double)s))+1;
 }
