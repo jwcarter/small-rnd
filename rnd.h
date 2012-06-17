@@ -15,32 +15,18 @@ void rnd_free(rnd_t rnd);
  * Random Numbers
  */
 
-/* Return double [0,1] in continuous uniform distribution */
-double rnd_closed(rnd_t rnd);
-
-/* Return double [0,1) in continuous uniform distribution */
-double rnd_double(rnd_t rnd);
+/* Return unsigned [0,4294967295] */
+unsigned rnd_unsigned(rnd_t rnd);
 
 /* Return double (0,1) in continuous uniform distribution */
-double rnd_open(rnd_t rnd);
-
-/* Return double [0,2] in continuous triangular distribution */
-double rnd_closed_2(rnd_t rnd);
-
-/* Return double [0,2) in continuous triangular distribution */
-double rnd_double_2(rnd_t rnd);
+double rnd_double(rnd_t rnd);
 
 /* Return double (0,2) in continuous triangular distribution */
-double rnd_open_2(rnd_t rnd);
-
-/* Return double [0,n] in continuous irwin hall distribution */
-double rnd_closed_n(rnd_t, unsigned n);
-
-/* Return double [0,n) in continuous irwin hall distribution */
-double rnd_double_n(rnd_t rnd, unsigned n);
+double rnd_double_2(rnd_t rnd);
 
 /* Return double (0,n) in continuous irwin hall distribution */
-double rnd_open_n(rnd_t rnd, unsigned n);
+double rnd_double_n(rnd_t rnd, unsigned n);
+
 
 /*
  * Continuous Distributions

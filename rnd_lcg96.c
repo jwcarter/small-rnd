@@ -94,8 +94,8 @@ struct rnd *rnd_new()
 void rnd_init(struct rnd *rnd, unsigned long seed)
 {
 	rnd->s1 = seed;
-	rnd->s2 = 1405695061UL; /* Prime */
-	rnd->s3 = 96557UL;       /* Prime */
+	rnd->s2 = 1405695061UL;
+	rnd->s3 = 96557UL;
 	next(rnd);
 	next(rnd);
 }
@@ -141,7 +141,7 @@ double rnd_double(struct rnd *rnd)
 double rnd_double_2(struct rnd *rnd)
 {
 /* Return double (0,2) in continuous triangular distribution */
-	return OPEN_DBL(next(rnd)+next(rnd));
+	return OPEN_DBL((double)next(rnd)+(double)next(rnd));
 }
 
 double rnd_double_n(struct rnd *rnd, unsigned n)
