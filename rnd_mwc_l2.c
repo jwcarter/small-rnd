@@ -1,44 +1,47 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdint.h>
+#include <float.h>
 
 /* 32 bit Multiply-With-Carry (MWC) with Lag 2
  *
- * 7.81 seconds for 1,000,000,000 calls
+ * Author: James Carter
  *
- * Using the TestU01 library from
+ * Tested with the TestU01 library from
  * http://www.iro.umontreal.ca/~simardr/testu01/tu01.html
  * Passes all of the tests of SmallCrush, FIPS-140-2, and pseudoDIEHARD
  * Passes all of the tests of Crush and BigCrush
  *
  * Criteria for MWCs:
- * For a given A with,
- * B = 2^32, and where L = Lag length,
- * A*B^L-1 and (A*B^L)/2-1 must be prime
+ * For a given base B and lag L, chose multiplier A such that:
+ * A*B^L-1 and A*B^L/2-1 are both prime.
+ * This will give a period of A*B^L/2-1
  *
  * Using:
- * A = 1326028899 [3 * 13 * 101 * 227 * 1483]
+ * A = 4294095429 [3*13*110105011]  (FFF2B245)
+ * B = 2^32
+ * L = 2
+ *
+ * Period: ~2^95
  */
 
 struct rnd {
-	unsigned long s1;
-	unsigned long s2;
-	unsigned long c;
+	uint32_t s1;
+	uint32_t s2;
+	uint32_t c;
 };
 
-/*
- * Internal - RNG Core
- */
+#define A 4294095429ULL
 
 #define L32(x) ((x)&0xFFFFFFFFUL)
-#define H32(x) ((x)>>32)
-#define A 1326028899ULL
+#define SR32(x) ((x)>>32)
 
-static inline unsigned long next(struct rnd *rnd)
+static inline uint32_t next(struct rnd *rnd)
 {
-	unsigned long long x = (unsigned long long)rnd->s1*A+rnd->c;
+	uint64_t x = rnd->s1*A+rnd->c;
 	rnd->s1 = rnd->s2;
 	rnd->s2 = L32(x);
-	rnd->c = H32(x);
+	rnd->c = SR32(x);
 	return rnd->s2;
 }
 
@@ -56,66 +59,65 @@ struct rnd *rnd_new()
 	return rnd;
 }
 
-void rnd_init(struct rnd *rnd, unsigned long seed)
+void rnd_init(struct rnd *rnd, uint32_t seed)
 {
 	rnd->s1 = seed;
-	rnd->s2 = 1405695061UL;
-	rnd->c = 96557UL;
+	rnd->s2 = 2147483647UL; /* 1st prime < 2^31 */
+	rnd->c  = 1073741789UL; /* 1st prime < 2^30 */
+	next(rnd);
 	next(rnd);
 	next(rnd);
 }
 
 void rnd_free(struct rnd *rnd)
 {
-	if (rnd)
-		free(rnd);
+	free(rnd);
 }
 
 /*
  * Random Numbers
  */
 
-/*
- * All returned doubles are on an open interval.
- * For interval (0,1):
- * Min: 0.00000000000000232831
- * Max: 0.99999999999999766853
- * There is no round off when generating unsigned ints from 0 - U_MAX
- * like so: (unsigned)floor(OPEN_DBL(next(rnd))*(U_MAX+1))
- * Min: 0
- * Max: U_MAX
- * Because there is no round off, don't need to generate closed intervals
- */
-
-#define U_MAX 4294967295UL
-#define D 0.00001
-#define D2 (2*(D))
-#define OPEN_DBL(x) ((((double)x)+D)/((double)U_MAX+D2))
+#define SMALL_RND_UMAX 4294967295ULL
+#define HIGH_OPEN (1.0 - DBL_EPSILON)
+#define LOW_OPEN (DBL_EPSILON)
+#define CLOSED(x) (((double)(x))/((double)(SMALL_RND_UMAX)))
+#define OPEN1(x) (CLOSED(x)*(HIGH_OPEN-LOW_OPEN)+LOW_OPEN)
+#define OPEN2(x) (CLOSED(x)*(HIGH_OPEN-LOW_OPEN)+2.0*LOW_OPEN)
+#define OPENn(x,n) (CLOSED(x)*(HIGH_OPEN-LOW_OPEN)+(n)*LOW_OPEN)
 
 unsigned rnd_unsigned(struct rnd *rnd)
 {
 	return next(rnd);
 }
 
+double rnd_closed(struct rnd *rnd)
+{
+	/* Return double [0,1] in continuous uniform distribution */
+	return CLOSED(next(rnd));
+}
+
 double rnd_double(struct rnd *rnd)
 {
-/* Return double (0,1) in continuous uniform distribution */
+	/* Return double (0,1) in continuous uniform distribution */
 	return OPEN_DBL(next(rnd));
 }
 
 double rnd_double_2(struct rnd *rnd)
 {
-/* Return double (0,2) in continuous triangular distribution */
+	/* Return double (0,2) in continuous triangular distribution */
 	return OPEN_DBL((double)next(rnd)+(double)next(rnd));
 }
 
 double rnd_double_n(struct rnd *rnd, unsigned n)
 {
-/* Return double (0,n) in continuous irwin hall distribution */
+	/* Return double (0,n) in continuous irwin hall distribution */
+	unsigned i = n;
 	double x = 0;
-	while (n-- > 0)
+	for (i = 0; i<n; i++) {
 		x += next(rnd);
-	return OPEN_DBL(x);
+	}
+	return OPENn(x,n);
 }
 
 /*
