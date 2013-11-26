@@ -59,7 +59,7 @@ struct rnd *rnd_new()
 	return rnd;
 }
 
-void rnd_init(struct rnd *rnd, uint32_t seed)
+void rnd_init(struct rnd *rnd, unsigned long seed)
 {
 	rnd->s1 = seed;
 	rnd->s2 = 2147483647UL; /* 1st prime < 2^31 */

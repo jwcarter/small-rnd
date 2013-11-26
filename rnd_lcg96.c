@@ -86,7 +86,7 @@ struct rnd *rnd_new()
 	return rnd;
 }
 
-void rnd_init(struct rnd *rnd, uint32_t seed)
+void rnd_init(struct rnd *rnd, unsigned long seed)
 {
 	rnd->s1 = seed;
 	rnd->s2 = 1405695061UL;

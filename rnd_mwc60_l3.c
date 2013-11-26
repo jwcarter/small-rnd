@@ -72,7 +72,7 @@ struct rnd *rnd_new()
 
 #define L60(x) ((x)&0xFFFFFFFFFFFFFFFULL)
 
-static void rnd_init(struct rnd *state, uint32_t seed)
+void rnd_init(struct rnd *state, unsigned long seed)
 {
 	state->s1 = L60(seed);
 	state->s2 = 576460752303423433ULL;  /* 1st prime < 2^59 */
