@@ -78,10 +78,10 @@ void rnd_free(struct rnd *rnd)
  * Random Numbers
  */
 
-#define SMALL_RND_UMAX 4294967295ULL
+#define UMAX 4294967295ULL
 #define HIGH_OPEN (1.0 - DBL_EPSILON)
 #define LOW_OPEN (DBL_EPSILON)
-#define CLOSED(x) (((double)(x))/((double)(SMALL_RND_UMAX)))
+#define CLOSED(x) (((double)(x))/((double)(UMAX)))
 #define OPEN1(x) (CLOSED(x)*(HIGH_OPEN-LOW_OPEN)+LOW_OPEN)
 #define OPEN2(x) (CLOSED(x)*(HIGH_OPEN-LOW_OPEN)+2.0*LOW_OPEN)
 #define OPENn(x,n) (CLOSED(x)*(HIGH_OPEN-LOW_OPEN)+(n)*LOW_OPEN)
@@ -119,19 +119,3 @@ double rnd_double_n(struct rnd *rnd, unsigned n)
 	}
 	return OPENn(x,n);
 }
-
-/*
- * RNG State
- */
-
-/* char *rnd_state_to_string(struct rnd *rnd) */
-/* { */
-/* } */
-
-/* struct rnd *rnd_string_to_state(struct rnd *rnd, char *state) */
-/* { */
-/* } */
-
-/* void rnd_free_state_string(char *state) */
-/* { */
-/* } */
