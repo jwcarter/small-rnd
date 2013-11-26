@@ -13,30 +13,22 @@
  * Passes all of the tests of Crush and BigCrush
  *
  * Doing 96 bit multiplication (mod 2^96) using 64 bit variables.
- * Ignoring endian concerns.
  *
  * Starting Bit:      96   64   32    0
  * ------------------------------------
- *                         n1   n2   n3
- *                     x   a1   a2   a3
+ *                         a1   a2   a3
+ *                     x   n1   n2   n3
  *                     ----------------
- *                       n1a3 n2a3 n3a3
- *                  n1a2 n2a2 n3a2
- *             n1a1 n2a1 n3a1
+ *                       n3a1 n3a2 n3a3
+ *                  n2a1 n2a2 n2a3
+ *             n1a1 n1a2 n1a3
  *
  * All the values starting at 96 bits or more are ignored since this is done
- * mode 2^96.
+ * mod 2^96.
  * So for each starting bit postion:
  *  0 Bit: n3a3
- * 32 Bit: n2a3+n3a2
- * 64 Bit: n1a2+n2a2+n3a1
- *
- * 1) Add the lower 16 bits of the data starting at bit 0 with the lowest
- *    16 bits of C.
- * 2) The lower 16 bits of state is the sum of the lower 16 bits from step 1.
- * 3) The upper 32 bits of state is the sum of the data starting at 16 bits,
- *    the data starting at 32 bits shifted up 16, and the upper 32 bits of C.
- *    No worries about overflow here.
+ * 32 Bit: n3a2+n2a3
+ * 64 Bit: n3a1+n2a2+n1a3
  *
  * The highest 32 bits are used for the random number.
  *
@@ -71,12 +63,12 @@ static inline uint32_t next(struct rnd *rnd)
 	uint64_t n3 = rnd->s3;
 	uint64_t x1, x2, x3, x4;
 	x1 = n3*A3 + C3;
-	x2 = n2*A3;
-	x3 = n3*A2 + C2;
+	x2 = n3*A2;
+	x3 = n2*A3 + C2;
 	x4 = L32(x2) + L32(x3) + SR32(x1);
 	rnd->s3 = L32(x1);
 	rnd->s2 = L32(x4);
-	rnd->s1 = L32(n1*A3 + n2*A2 + n3*A1 + C1 + SR32(x2) + SR32(x3) + SR32(x4));
+	rnd->s1 = L32(n3*A1 + n2*A2 + n1*A3 + C1 + SR32(x2) + SR32(x3) + SR32(x4));
 	return rnd->s1;
 }
 
