@@ -50,8 +50,16 @@ double rnd_dist_triangle_skewed(rnd_t rnd, double low, double high,
 
 double rnd_dist_normal(rnd_t rnd, double mean, double sd)
 {
-/* Return double (-6*sd+mean,6*sd+mean) in (roughly) normal distribution */
-	return rnd_double_n(rnd,12)*sd-6.0*sd+mean;
+	/* Return double in normal distribution using the Marsaglia polar method */
+	double u, v, s;
+
+	do {
+		u = rnd_closed*2.0-1.0;
+		v = rnd_closed*2.0-1.0;
+		s = u*u + v*v;
+	} while (s == 0 || s >= 1.0);
+
+	return u*sqrt(-2.0*log(s)/s);
 }
 
 double rnd_dist_irwin_hall(rnd_t rnd, unsigned n, double low, double high)
