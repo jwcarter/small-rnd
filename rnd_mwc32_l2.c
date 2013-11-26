@@ -100,13 +100,13 @@ double rnd_closed(struct rnd *rnd)
 double rnd_double(struct rnd *rnd)
 {
 	/* Return double (0,1) in continuous uniform distribution */
-	return OPEN_DBL(next(rnd));
+	return OPEN1(next(rnd));
 }
 
 double rnd_double_2(struct rnd *rnd)
 {
 	/* Return double (0,2) in continuous triangular distribution */
-	return OPEN_DBL((double)next(rnd)+(double)next(rnd));
+	return OPEN2((double)next(rnd)+(double)next(rnd));
 }
 
 double rnd_double_n(struct rnd *rnd, unsigned n)
