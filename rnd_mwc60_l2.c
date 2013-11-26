@@ -76,6 +76,28 @@ void rnd_init(struct rnd *state, unsigned long seed)
 	next(state);
 }
 
+unsigned rnd_get_state_size()
+{
+	return sizeof(struct rnd);
+}
+
+void rnd_get_state(struct rnd *rnd, unsigned long state[])
+{
+	state[0] = SR30(rnd->s1);
+	state[1] = L30(rnd->s1);
+	state[2] = SR30(rnd->s2);
+	state[3] = L30(rnd->s2);
+	state[4] = SR30(rnd->c);
+	state[5] = L30(rnd->c);
+}
+
+void rnd_set_state(struct rnd *rnd, unsigned long state[])
+{
+	rnd->s1 = (uint64_t)L60((SL30((uint64_t)state[0]) | L30(state[1])));
+	rnd->s2 = (uint64_t)L60((SL30((uint64_t)state[2]) | L30(state[3])));
+	rnd->c  = (uint64_t)L60((SL30((uint64_t)state[4]) | L30(state[5])));
+}
+
 void rnd_free(struct rnd *rnd)
 {
 	free(rnd);
