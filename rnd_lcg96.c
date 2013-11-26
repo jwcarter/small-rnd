@@ -1,15 +1,14 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include <math.h>
+#include <stdint.h>
 #include <float.h>
 
-/* 96 bit LCG  -- Values selected by James Carter
+/* 96 bit LCG
  *
- * 13.76 seconds for 1,000,000,000 calls
- * M = 2^96
- * A = 38684117612769018905840676133  (19577194573 * 1405695061 * 1405695061)
- * C = 904120679537356008193          (94418953 * 3276509 * 2922509)
+ * Author: James Carter
  *
+ * Tested with the TestU01 library from
+ * http://www.iro.umontreal.ca/~simardr/testu01/tu01.html
  * Passes all of the tests of SmallCrush, FIPS-140-2, and pseudoDIEHARD
  * Passes all of the tests of Crush and BigCrush
  *
@@ -40,12 +39,16 @@
  *    No worries about overflow here.
  *
  * The highest 32 bits are used for the random number.
+ *
+ * M = 2^96
+ * A = 38684117612769018905840676133  (19577194573*1405695061*1405695061)
+ * C = 904120679537356008193          (94418953*3276509*2922509)
  */
 
 struct rnd {
-	unsigned long s1;
-	unsigned long s2;
-	unsigned long s3;
+	uint32_t s1;
+	uint32_t s2;
+	uint32_t s3;
 };
 
 /*
@@ -53,7 +56,7 @@ struct rnd {
  */
 
 #define L32(x) ((x)&0xFFFFFFFFUL)
-#define H32(x) ((x)>>32)
+#define SR32(x) ((x)>>32)
 #define A1 0x7CFEC089UL
 #define A2 0xD28BDF7EUL
 #define A3 0x5A616D25UL
@@ -61,19 +64,19 @@ struct rnd {
 #define C2 0x0331E7CDUL
 #define C3 0x74E36B01UL
 
-static inline unsigned long next(struct rnd *rnd)
+static inline uint32_t next(struct rnd *rnd)
 {
-	unsigned long long n1 = rnd->s1;
-	unsigned long long n2 = rnd->s2;
-	unsigned long long n3 = rnd->s3;
-	unsigned long long x1, x2, x3, x4;
+	uint64_t n1 = rnd->s1;
+	uint64_t n2 = rnd->s2;
+	uint64_t n3 = rnd->s3;
+	uint64_t x1, x2, x3, x4;
 	x1 = n3*A3 + C3;
 	x2 = n2*A3;
 	x3 = n3*A2 + C2;
-	x4 = L32(x2) + L32(x3) + H32(x1);
+	x4 = L32(x2) + L32(x3) + SR32(x1);
 	rnd->s3 = L32(x1);
 	rnd->s2 = L32(x4);
-	rnd->s1 = L32(n1*A3 + n2*A2 + n3*A1 + C1 + H32(x2) + H32(x3) + H32(x4));
+	rnd->s1 = L32(n1*A3 + n2*A2 + n3*A1 + C1 + SR32(x2) + SR32(x3) + SR32(x4));
 	return rnd->s1;
 }
 
@@ -91,80 +94,63 @@ struct rnd *rnd_new()
 	return rnd;
 }
 
-void rnd_init(struct rnd *rnd, unsigned long seed)
+void rnd_init(struct rnd *rnd, uint32_t seed)
 {
 	rnd->s1 = seed;
 	rnd->s2 = 1405695061UL;
 	rnd->s3 = 96557UL;
 	next(rnd);
 	next(rnd);
+	next(rnd);
 }
 
 void rnd_free(struct rnd *rnd)
 {
-	if (rnd)
-		free(rnd);
+	free(rnd);
 }
 
 /*
  * Random Numbers
  */
 
-/*
- * All returned doubles are on an open interval.
- * For interval (0,1):
- * Min: 0.00000000000000232831
- * Max: 0.99999999999999766853
- * There is no round off when generating unsigned ints from 0 - U_MAX
- * like so: (unsigned)floor(OPEN_DBL(next(rnd))*(U_MAX+1))
- * Min: 0
- * Max: U_MAX
- * Because there is no round off, don't need to generate closed intervals
- */
-
-#define U_MAX 4294967295UL
-#define D 0.00001
-#define D2 (2*(D))
-#define OPEN_DBL(x) ((((double)x)+D)/((double)U_MAX+D2))
+#define UMAX 4294967295ULL
+#define HIGH_OPEN (1.0 - DBL_EPSILON)
+#define LOW_OPEN (DBL_EPSILON)
+#define CLOSED(x) (((double)(x))/((double)(UMAX)))
+#define OPEN1(x) (CLOSED(x)*(HIGH_OPEN-LOW_OPEN)+LOW_OPEN)
+#define OPEN2(x) (CLOSED(x)*(HIGH_OPEN-LOW_OPEN)+2.0*LOW_OPEN)
+#define OPENn(x,n) (CLOSED(x)*(HIGH_OPEN-LOW_OPEN)+(n)*LOW_OPEN)
 
 unsigned rnd_unsigned(struct rnd *rnd)
 {
 	return next(rnd);
 }
 
+double rnd_closed(struct rnd *rnd)
+{
+	/* Return double [0,1] in continuous uniform distribution */
+	return CLOSED(next(rnd));
+}
+
 double rnd_double(struct rnd *rnd)
 {
-/* Return double (0,1) in continuous uniform distribution */
-	return OPEN_DBL(next(rnd));
+	/* Return double (0,1) in continuous uniform distribution */
+	return OPEN1(next(rnd));
 }
 
 double rnd_double_2(struct rnd *rnd)
 {
-/* Return double (0,2) in continuous triangular distribution */
-	return OPEN_DBL((double)next(rnd)+(double)next(rnd));
+	/* Return double (0,2) in continuous triangular distribution */
+	return OPEN2((double)next(rnd)+(double)next(rnd));
 }
 
 double rnd_double_n(struct rnd *rnd, unsigned n)
-{
-/* Return double (0,n) in continuous irwin hall distribution */
+{	
+	/* Return double (0,n) in continuous irwin hall distribution */
+	unsigned i = n;
 	double x = 0;
-	while (n-- > 0)
+	for (i = 0; i<n; i++) {
 		x += next(rnd);
-	return OPEN_DBL(x);
+	}
+	return OPENn(x,n);
 }
-
-/*
- * RNG State
- */
-
-/* char *rnd_state_to_string(struct rnd *rnd) */
-/* { */
-/* } */
-
-/* struct rnd *rnd_string_to_state(struct rnd *rnd, char *state) */
-/* { */
-/* } */
-
-/* void rnd_free_state_string(char *state) */
-/* { */
-/* } */
