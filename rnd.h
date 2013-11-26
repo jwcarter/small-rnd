@@ -15,8 +15,11 @@ void rnd_free(rnd_t rnd);
  * Random Numbers
  */
 
-/* Return unsigned [0,4294967295] */
-unsigned rnd_unsigned(rnd_t rnd);
+/* Returns the maximum number that will be return by rnd_number() */
+unsigned long rnd_number_max(rnd_t rnd);
+
+/* Use rnd_number_max() to find the max value that can be returned */
+unsigned long rnd_number(rnd_t rnd);
 
 /* Return double (0,1) in continuous uniform distribution */
 double rnd_double(rnd_t rnd);
