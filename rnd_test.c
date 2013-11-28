@@ -1,16 +1,12 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <math.h>
 #include <time.h> /* Use time() for initializing random seed */
 
 #include "rnd.h"
 
-#define NUM_ROLLS 10000000
-
-#define U_MAX 4294967295UL
-#define D 0.00001
-#define D2 (2*(D))
-#define OPEN_DBL(x) ((((double)x)+D)/((double)U_MAX+D2))
+#define TEST_SIZE 10000000
 
 static void print_dist(int min, int max, int dist[])
 {
@@ -25,7 +21,7 @@ static void print_dist(int min, int max, int dist[])
 			printf("%4d",i);
 		printf("\n");
 		for (i=j;i<k;i++)
-			printf("%4.0f",floor(dist[i]*1000.0/NUM_ROLLS+0.5));
+			printf("%4.0f",floor(dist[i]*1000.0/TEST_SIZE+0.5));
 		printf("\n\n");
 		j=k;
 		k=k+20;
@@ -36,31 +32,63 @@ static void print_dist(int min, int max, int dist[])
 void rnd_test(rnd_t rnd)
 {
 	int dist[20];
-	int i,r,total;
+	int i,r;
+	uint64_t total;
 	double dr, dt;
-	int low=1,high=2;
 	clock_t start,stop;
+	uint64_t max = rnd_number_max();
 
 	for (i=0; i < 20; i++)
 		dist[i] = 0;
 
 	printf("Testing the random number generator\n");
-	printf("Value for D (%.15f) is %s\n",D,
-					((double)U_MAX > ((double)U_MAX-D)) ? "good" : "bad");
-	printf("rnd_double min: %.15f\n",OPEN_DBL(0));
-	printf("rnd_double max: %.15f\n",OPEN_DBL(U_MAX));
+	printf("rnd_number max: %llu\n",max);
 	printf("\n");
+
+	printf("Testing rnd_number\n");
+	total = 0;
+	start = clock();
+	for (i=0; i < TEST_SIZE; i++) {
+		total += rnd_number(rnd);
+	}
+	stop = clock();
+	printf("Avg=%.0f (Expected: %.0f) (Time: %5.3f)\n\n", 
+					(double)total/TEST_SIZE, (double)max/2.0, 
+					((double)(stop-start)/CLOCKS_PER_SEC));
+
+	printf("Testing rnd_closed\n");
+	dt = 0.0;
+	start = clock();
+	for (i=0; i < TEST_SIZE; i++) {
+		dt += rnd_closed(rnd);
+	}
+	stop = clock();
+	printf("Avg=%7.5f (Expected: %7.5f) (Time: %5.3f)\n\n", 
+					(double)dt/TEST_SIZE, 0.5, 
+					((double)(stop-start)/CLOCKS_PER_SEC));
+
+	printf("Testing rnd_double\n");
+	dt = 0.0;
+	start = clock();
+	for (i=0; i < TEST_SIZE; i++) {
+		dt += rnd_double(rnd);
+	}
+	stop = clock();
+	printf("Avg=%7.5f (Expected: %7.5f) (Time: %5.3f)\n\n", 
+					(double)dt/TEST_SIZE, 0.5, 
+					((double)(stop-start)/CLOCKS_PER_SEC));
+
 	printf("Testing rnd_int\n");
 	total = 0;
 	start = clock();
-	for (i=0; i < NUM_ROLLS; i++) {
+	for (i=0; i < TEST_SIZE; i++) {
 		r = rnd_int(rnd,0,19);
 		dist[r]++;
 		total += r;
 	}
 	stop = clock();
 	printf("Range: %d-%d: Avg=%5.3f (Expected: %5.3f) (Time: %5.3f)\n", 
-					0, 19, (double)total/NUM_ROLLS, (0+19)/2.0, 
+					0, 19, (double)total/TEST_SIZE, (0+19)/2.0, 
 					((double)(stop-start)/CLOCKS_PER_SEC));
 	print_dist(0, 19, dist);
 
@@ -69,14 +97,14 @@ void rnd_test(rnd_t rnd)
 		dist[i] = 0;
 	total = 0;
 	start = clock();
-	for (i=0; i < NUM_ROLLS; i++) {
+	for (i=0; i < TEST_SIZE; i++) {
 		r = rnd_roll(rnd,3,6);
 		dist[r]++;
 		total += r;
 	}
 	stop = clock();
 	printf("Range: %d-%d: Avg=%5.3f (Expected: %5.3f) (Time: %5.3f)\n", 
-					3, 18, (double)total/NUM_ROLLS, (3+18)/2.0, 
+					3, 18, (double)total/TEST_SIZE, (3+18)/2.0, 
 					((double)(stop-start)/CLOCKS_PER_SEC));
 	print_dist(0, 19, dist);
 
@@ -85,14 +113,14 @@ void rnd_test(rnd_t rnd)
 		dist[i] = 0;
 	total = 0;
 	start = clock();
-	for (i=0; i < NUM_ROLLS; i++) {
+	for (i=0; i < TEST_SIZE; i++) {
 		r = rnd_roll_mid(rnd,18);
 		dist[r]++;
 		total += r;
 	}
 	stop = clock();
 	printf("Range: %d-%d: Avg=%5.3f (Expected: %5.3f) (Time: %5.3f)\n", 
-					1, 18, (double)total/NUM_ROLLS, (1+18)/2.0, 
+					1, 18, (double)total/TEST_SIZE, (1+18)/2.0, 
 					((double)(stop-start)/CLOCKS_PER_SEC));
 	print_dist(0, 19, dist);
 
@@ -101,14 +129,14 @@ void rnd_test(rnd_t rnd)
 		dist[i] = 0;
 	dt = 0;
 	start = clock();
-	for (i=0; i < NUM_ROLLS; i++) {
+	for (i=0; i < TEST_SIZE; i++) {
 		dr = rnd_dist_uniform(rnd,0,20);
 		dt += dr;
 		dist[(int)floor(dr)]++;
 	}
 	stop = clock();
 	printf("Range: %d-%d: Avg=%5.3f (Expected: %5.3f) (Time: %5.3f)\n",
-					0, 19, (double)dt/NUM_ROLLS, (0+20)/2.0, 
+					0, 19, (double)dt/TEST_SIZE, (0+20)/2.0, 
 					((double)(stop-start)/CLOCKS_PER_SEC));
 	print_dist(0, 19, dist);
 
@@ -117,14 +145,14 @@ void rnd_test(rnd_t rnd)
 		dist[i] = 0;
 	dt = 0;
 	start = clock();
-	for (i=0; i < NUM_ROLLS; i++) {
-		dr = rnd_dist_normal(rnd,10,1.5);
+	for (i=0; i < TEST_SIZE; i++) {
+		dr = rnd_dist_normal(rnd,10,1.0);
 		dt += dr;
 		dist[(int)floor(dr)]++;
 	}
 	stop = clock();
 	printf("Range: %d-%d: Avg=%5.3f (Expected: %5.3f) (Time: %5.3f)\n",
-					0, 19, (double)dt/NUM_ROLLS, (0+20)/2.0,
+					0, 19, (double)dt/TEST_SIZE, (0+20)/2.0,
 					((double)(stop-start)/CLOCKS_PER_SEC));
 	print_dist(0, 19, dist);
 
@@ -133,14 +161,14 @@ void rnd_test(rnd_t rnd)
 		dist[i] = 0;
 	dt = 0;
 	start = clock();
-	for (i=0; i < NUM_ROLLS; i++) {
+	for (i=0; i < TEST_SIZE; i++) {
 		dr = rnd_dist_triangle(rnd,0,20);
 		dt += dr;
 		dist[(int)floor(dr)]++;
 	}
 	stop = clock();
 	printf("Range: %d-%d: Avg=%5.3f (Expected: %5.3f) (Time: %5.3f)\n",
-					0, 19, (double)dt/NUM_ROLLS, (0+20)/2.0,
+					0, 19, (double)dt/TEST_SIZE, (0+20)/2.0,
 					((double)(stop-start)/CLOCKS_PER_SEC));
 	print_dist(0, 19, dist);
 
@@ -149,14 +177,14 @@ void rnd_test(rnd_t rnd)
 		dist[i] = 0;
 	dt = 0;
 	start = clock();
-	for (i=0; i < NUM_ROLLS; i++) {
-		dr = rnd_dist_irwin_hall(rnd,12,0,20);
+	for (i=0; i < TEST_SIZE; i++) {
+		dr = rnd_dist_irwin_hall(rnd,12,4,16);
 		dt += dr;
 		dist[(int)floor(dr)]++;
 	}
 	stop = clock();
 	printf("Range: %d-%d: Avg=%5.3f (Expected: %5.3f) (Time: %5.3f)\n",
-					0, 19, (double)dt/NUM_ROLLS, (0+20)/2.0,
+					0, 19, (double)dt/TEST_SIZE, (0+20)/2.0,
 					((double)(stop-start)/CLOCKS_PER_SEC));
 	print_dist(0, 19, dist);
 }
