@@ -54,12 +54,12 @@ double rnd_dist_normal(rnd_t rnd, double mean, double sd)
 	double u, v, s;
 
 	do {
-		u = rnd_closed*2.0-1.0;
-		v = rnd_closed*2.0-1.0;
+		u = rnd_closed(rnd)*2.0-1.0;
+		v = rnd_closed(rnd)*2.0-1.0;
 		s = u*u + v*v;
-	} while (s == 0 || s >= 1.0);
+	} while (s == 0.0 || s >= 1.0);
 
-	return u*sqrt(-2.0*log(s)/s);
+	return u*sqrt(-2.0*log(s)/s)*sd + mean;
 }
 
 double rnd_dist_irwin_hall(rnd_t rnd, unsigned n, double low, double high)
