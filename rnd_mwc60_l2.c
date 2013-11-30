@@ -36,6 +36,7 @@ struct rnd {
 #define L30(x) ((x)&0x3FFFFFFFULL)
 #define SR30(x) ((x)>>30)
 #define SL30(x) ((x)<<30)
+#define L50(x) ((x)&0x3FFFFFFFFFFFFULL)
 
 static inline uint64_t next(struct rnd *state)
 {
@@ -47,7 +48,7 @@ static inline uint64_t next(struct rnd *state)
 	state->s1 = state->s2;
 	state->s2 = SL30(L30(x2)) | L30(x1);
 	state->c = n2*A2 + SR30(x2);
-	return state->s2;
+	return L50(state->s2);
 }
 
 /*
@@ -109,10 +110,9 @@ void rnd_free(struct rnd *rnd)
  */
 
 #define UMAX 1125899906842623ULL /* 2^50-1 */
-#define L50(x) ((x)&0x3FFFFFFFFFFFFULL)
 #define HIGH_OPEN (1.0 - DBL_EPSILON)
 #define LOW_OPEN (DBL_EPSILON)
-#define CLOSED(x) (((double)(L50(x)))/((double)(UMAX)))
+#define CLOSED(x) (((double)(x))/((double)(UMAX)))
 #define OPEN1(x) (CLOSED(x)*(HIGH_OPEN-LOW_OPEN)+LOW_OPEN)
 #define OPEN2(x) (CLOSED(x)*(HIGH_OPEN-LOW_OPEN)+2.0*LOW_OPEN)
 #define OPENn(x,n) (CLOSED(x)*(HIGH_OPEN-LOW_OPEN)+(n)*LOW_OPEN)
@@ -142,14 +142,14 @@ double rnd_double(struct rnd *rnd)
 double rnd_double_2(struct rnd *rnd)
 {
 	/* Return double (0,2) in continuous triangular distribution */
-	return OPEN2((double)next(rnd) + (double)next(rnd));
+	return OPEN2(next(rnd) + next(rnd));
 }
 
 double rnd_double_n(struct rnd *rnd, unsigned n)
 {
 	/* Return double (0,n) in continuous irwin hall distribution */
 	unsigned i = n;
-	double x = 0;
+	uint64_t x = 0;
 	for (i = 0; i<n; i++) {
 		x += next(rnd);
 	}
