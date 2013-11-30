@@ -37,6 +37,9 @@ void rnd_test(rnd_t rnd)
 	double dr, dt;
 	clock_t start,stop;
 	uint64_t max = rnd_number_max();
+	unsigned size;
+	uint32_t *state;
+	char *state_str;
 
 	for (i=0; i < 20; i++)
 		dist[i] = 0;
@@ -45,15 +48,44 @@ void rnd_test(rnd_t rnd)
 	printf("rnd_number max: %llu\n",max);
 	printf("\n");
 
+	printf("state size = %u\n\n",rnd_get_state_size());
+
+	printf("Setting state with string (Size right for MWC32 lag 2)\n");
+	state_str = "345678901abcdef22fedcba1"; /* MWC60 use only lower 30bits */
+	printf("In : %s\n",state_str);
+	rnd_string_to_state(rnd, state_str);
+	state_str = rnd_state_to_string(rnd);
+	printf("Out: %s\n\n",state_str);
+
+	printf("Setting state with string (Size right for MWC60 lag 3)\n");
+	state_str = "34567890098765431abcdef22fedcba134567890098765431abcdef22fedcba1";
+	printf("In : %s\n",state_str);
+	rnd_string_to_state(rnd, state_str);
+	state_str = rnd_state_to_string(rnd);
+	printf("Out: %s\n\n",state_str);
+
+	rnd_init(rnd, (unsigned long)time(NULL));
+	printf("Getting state\n");
+	state = malloc(size);
+	size = rnd_get_state_size();
+	rnd_get_state(rnd, state);
+	printf("From array : ");
+	for (i=0; i<size/sizeof(uint32_t); i++) {
+		printf("%08lx",state[i]);
+	}
+	printf("\n");
+	state_str = rnd_state_to_string(rnd);
+	printf("From string: %s\n\n",state_str);
+
 	printf("Testing rnd_number\n");
-	total = 0;
+	dt  = 0.0;
 	start = clock();
 	for (i=0; i < TEST_SIZE; i++) {
-		total += rnd_number(rnd);
+		dt += rnd_number(rnd);
 	}
 	stop = clock();
 	printf("Avg=%.0f (Expected: %.0f) (Time: %5.3f)\n\n", 
-					(double)total/TEST_SIZE, (double)max/2.0, 
+					dt/TEST_SIZE, (double)max/2.0, 
 					((double)(stop-start)/CLOCKS_PER_SEC));
 
 	printf("Testing rnd_closed\n");
@@ -64,7 +96,7 @@ void rnd_test(rnd_t rnd)
 	}
 	stop = clock();
 	printf("Avg=%7.5f (Expected: %7.5f) (Time: %5.3f)\n\n", 
-					(double)dt/TEST_SIZE, 0.5, 
+					dt/TEST_SIZE, 0.5, 
 					((double)(stop-start)/CLOCKS_PER_SEC));
 
 	printf("Testing rnd_double\n");
@@ -75,7 +107,7 @@ void rnd_test(rnd_t rnd)
 	}
 	stop = clock();
 	printf("Avg=%7.5f (Expected: %7.5f) (Time: %5.3f)\n\n", 
-					(double)dt/TEST_SIZE, 0.5, 
+					dt/TEST_SIZE, 0.5, 
 					((double)(stop-start)/CLOCKS_PER_SEC));
 
 	printf("Testing rnd_int\n");
@@ -192,7 +224,6 @@ void rnd_test(rnd_t rnd)
 int main(int argc, char **argv)
 {
 	rnd_t rnd = rnd_new();
-	rnd_init(rnd, (unsigned long)time(NULL));
 
 	rnd_test(rnd);
 

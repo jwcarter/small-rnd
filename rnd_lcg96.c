@@ -101,14 +101,14 @@ unsigned rnd_get_state_size()
 	return sizeof(struct rnd);
 }
 
-void rnd_get_state(struct rnd *rnd, unsigned long state[])
+void rnd_get_state(struct rnd *rnd, uint32_t state[])
 {
 	state[0] = rnd->s1;
 	state[1] = rnd->s2;
 	state[2] = rnd->s3;
 }
 
-void rnd_set_state(struct rnd *rnd, unsigned long state[])
+void rnd_set_state(struct rnd *rnd, uint32_t state[])
 {
 	rnd->s1 = state[0];
 	rnd->s2 = state[1];

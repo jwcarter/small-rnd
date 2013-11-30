@@ -1,3 +1,4 @@
+#include <stdint.h>
 
 typedef struct rnd * rnd_t;
 
@@ -10,6 +11,16 @@ rnd_t rnd_new();
 void rnd_init(rnd_t rnd, unsigned long seed);
 
 void rnd_free(rnd_t rnd);
+
+unsigned rnd_get_state_size();
+
+void rnd_get_state(struct rnd *rnd, uint32_t state[]);
+
+void rnd_set_state(struct rnd *rnd, uint32_t state[]);
+
+char *rnd_state_to_string(rnd_t rnd);
+
+void rnd_string_to_state(rnd_t rnd, char *state_str);
 
 /*
  * Random Numbers

@@ -89,7 +89,7 @@ unsigned rnd_get_state_size()
 	return sizeof(struct rnd);
 }
 
-void rnd_get_state(struct rnd *rnd, unsigned long state[])
+void rnd_get_state(struct rnd *rnd, uint32_t state[])
 {
 	state[0] = SR30(rnd->s1);
 	state[1] = L30(rnd->s1);
@@ -101,7 +101,7 @@ void rnd_get_state(struct rnd *rnd, unsigned long state[])
 	state[7] = L30(rnd->c);
 }
 
-void rnd_set_state(struct rnd *rnd, unsigned long state[])
+void rnd_set_state(struct rnd *rnd, uint32_t state[])
 {
 	rnd->s1 = (uint64_t)L60((SL30((uint64_t)state[0]) | L30(state[1])));
 	rnd->s2 = (uint64_t)L60((SL30((uint64_t)state[2]) | L30(state[3])));

@@ -1,8 +1,120 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <stdint.h>
 
 #include "rnd.h"
+
+
+static char *put_ul(char *cur, uint32_t v)
+{
+	unsigned i;
+
+	for (i=0; i<8; i++) {
+		char x = (0xF0000000UL & v)>>28;
+		if (x < 10) {
+			*cur = x + '0';
+		} else {
+			*cur = x - 10 + 'a';
+		}
+		v = v<<4;
+		cur++;
+	}
+
+	return cur;
+}
+
+char *rnd_state_to_string(rnd_t rnd)
+{
+	unsigned i;
+	unsigned size = rnd_get_state_size();
+	uint32_t *state = malloc(size);
+	char *state_str = malloc(2*size+1);
+	char * cur = state_str;
+
+	if (!rnd) {
+		return NULL;
+	}
+
+	if (!state || !state_str) {
+		fprintf(stderr,"rnd: Malloc failed!");
+		exit(-1);
+	}
+
+	rnd_get_state(rnd, state);
+
+	for (i=0; i<size/sizeof(uint32_t); i++) {
+		cur = put_ul(cur, state[i]);
+	}
+	
+	*cur = '\0';
+
+	return state_str;
+}
+
+static char *get_ul(char *start, char *cur, uint32_t *v)
+{
+	unsigned i = 0;
+	uint32_t value = 0;
+
+	while (i < 8) {
+		value = value<<4;
+		if (*cur >= '0' && *cur <= '9') {
+			value |= (unsigned long)(*cur - '0');
+		} else if (*cur >= 'A' && *cur <= 'F') {
+			value |= (unsigned long)(*cur - 'A' + 10);
+		} else if (*cur >= 'a' && *cur <= 'f') {
+			value |= (unsigned long)(*cur - 'a' + 10);
+		} else if (*cur == '\0') {
+			/* end of string -- wrap around */
+			i--;
+			value = value >>4;
+		} else {
+			printf("Illegal character in state string (%c)\n",*cur);
+			exit(-1);
+		}
+
+		if (*cur != '\0') {
+			cur++;
+		} else {
+			cur = start;
+		}
+
+		i++;
+	}
+
+	*v = value;
+
+	return cur;
+}
+
+void rnd_string_to_state(rnd_t rnd, char *state_str)
+{
+	unsigned i;
+	char * cur = state_str;
+	unsigned size = rnd_get_state_size(rnd);
+	uint32_t *state = malloc(size);
+
+	if (!rnd || !state_str) {
+		return;
+	}
+
+	if (!state) {
+		fprintf(stderr,"rnd: Malloc failed!");
+		exit(-1);
+	}
+
+	for (i=0; i<size/sizeof(uint32_t); i++) {
+		cur = get_ul(state_str, cur, &state[i]);
+	}
+
+	rnd_set_state(rnd, state);
+}
+
+void rnd_free_state_str(char *state_str)
+{
+	free(state_str);
+}
 
 /*
  * Continuous Distributions
