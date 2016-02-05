@@ -117,6 +117,22 @@ void rnd_free_state_str(char *state_str)
 }
 
 /*
+ * Max values
+ */
+
+#define UMAX32 4294967295ULL
+uint32_t rnd_max32()
+{
+	return UMAX32;
+}
+
+#define UMAX64 18446744073709551615ULL
+uint64_t rnd_max64()
+{
+	return UMAX64;
+}
+
+/*
  * Continuous Distributions
  */
 

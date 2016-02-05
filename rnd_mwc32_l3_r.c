@@ -124,14 +124,14 @@ void rnd_free(struct rnd *rnd)
 #define OPEN2(x) (CLOSED(x)*(HIGH_OPEN-LOW_OPEN)+2.0*LOW_OPEN)
 #define OPENn(x,n) (CLOSED(x)*(HIGH_OPEN-LOW_OPEN)+(n)*LOW_OPEN)
 
-unsigned long rnd_number_max()
-{
-	return UMAX32;
-}
-
-unsigned long rnd_number(struct rnd *rnd)
+uint32_t rnd_unsigned32(struct rnd *rnd)
 {
 	return L32(next(rnd));
+}
+
+uint64_t rnd_unsigned64(struct rnd *rnd)
+{
+	return next(rnd);
 }
 
 double rnd_closed(struct rnd *rnd)

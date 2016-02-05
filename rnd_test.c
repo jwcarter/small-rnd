@@ -36,7 +36,8 @@ void rnd_test(rnd_t rnd)
 	uint64_t total;
 	double dr, dt;
 	clock_t start,stop;
-	uint64_t max = rnd_number_max();
+	uint32_t max32 = rnd_max32();
+	uint64_t max64 = rnd_max64();
 	unsigned size;
 	uint32_t *state;
 	char *state_str;
@@ -45,7 +46,8 @@ void rnd_test(rnd_t rnd)
 		dist[i] = 0;
 
 	printf("Testing the random number generator\n");
-	printf("rnd_number max: %llu\n",max);
+	printf("rnd max32: %u\n",max32);
+	printf("rnd max64: %llu\n",max64);
 	printf("\n");
 
 	printf("state size = %u\n\n",rnd_get_state_size());
@@ -77,15 +79,26 @@ void rnd_test(rnd_t rnd)
 	state_str = rnd_state_to_string(rnd);
 	printf("From string: %s\n\n",state_str);
 
-	printf("Testing rnd_number\n");
+	printf("Testing rnd_unsigned32\n");
 	dt  = 0.0;
 	start = clock();
 	for (i=0; i < TEST_SIZE; i++) {
-		dt += rnd_number(rnd);
+		dt += rnd_unsigned32(rnd);
 	}
 	stop = clock();
 	printf("Avg=%.0f (Expected: %.0f) (Time: %5.3f)\n\n", 
-					dt/TEST_SIZE, (double)max/2.0, 
+					dt/TEST_SIZE, (double)max32/2.0, 
+					((double)(stop-start)/CLOCKS_PER_SEC));
+	
+	printf("Testing rnd_unsigned64\n");
+	dt  = 0.0;
+	start = clock();
+	for (i=0; i < TEST_SIZE; i++) {
+		dt += rnd_unsigned64(rnd);
+	}
+	stop = clock();
+	printf("Avg=%.0f (Expected: %.0f) (Time: %5.3f)\n\n", 
+					dt/TEST_SIZE, (double)max64/2.0, 
 					((double)(stop-start)/CLOCKS_PER_SEC));
 
 	printf("Testing rnd_closed\n");

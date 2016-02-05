@@ -26,11 +26,17 @@ void rnd_string_to_state(rnd_t rnd, char *state_str);
  * Random Numbers
  */
 
-/* Returns the maximum number that will be return by rnd_number() */
-unsigned long rnd_number_max();
+/* Returns 2^32-1 (4294967295) */
+uint32_t rnd_max32();
 
-/* Use rnd_number_max() to find the max value that can be returned */
-unsigned long rnd_number(rnd_t rnd);
+/* Returns 2^64-1 (18446744073709551615) */
+uint64_t rnd_max64();
+
+/* Max value is 2^32-1 (4294967295) */
+uint32_t rnd_unsigned32(rnd_t rnd);
+
+/* Max value is 2^64-1 (18446744073709551615) */
+uint64_t rnd_unsigned64(rnd_t rnd);
 
 /* Return double [0,1] in continuous uniform distribution */
 double rnd_closed(rnd_t rnd);
