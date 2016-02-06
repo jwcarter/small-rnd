@@ -12,11 +12,14 @@ void rnd_init(rnd_t rnd, unsigned long seed);
 
 void rnd_free(rnd_t rnd);
 
-unsigned rnd_get_state_size();
+unsigned rnd_get_state_size_bytes();
+unsigned rnd_get_state_size_u32();
 
-void rnd_get_state(struct rnd *rnd, uint32_t state[]);
+uint32_t *rnd_get_state(struct rnd *rnd);
 
-void rnd_set_state(struct rnd *rnd, uint32_t state[]);
+void rnd_free_state();
+
+void rnd_set_state(struct rnd *rnd, uint32_t state[], unsigned size);
 
 char *rnd_state_to_string(rnd_t rnd);
 
@@ -71,8 +74,8 @@ double rnd_dist_triangle_right(rnd_t rnd, double low, double high);
  *   Peak of distribution is at mode.
  *   (mode-low) and (high-mode) are not necessarily equal
 */
-double rnd_dist_triangle_skewed(rnd_t rnd, double low, double high, 
-				double mode);
+double rnd_dist_triangle_skewed(rnd_t rnd, double low, double high,
+								double mode);
 
 /* Generate double (-6*sd+mean,6*sd+mean) in (roughly) normal distribution */
 double rnd_dist_normal(rnd_t rnd, double mean, double sd);
@@ -87,12 +90,12 @@ double rnd_dist_normal(rnd_t rnd, double mean, double sd);
 double rnd_dist_irwin_hall(rnd_t rnd, unsigned n, double low, double high);
 
 /* Generate double (low,high) in left half of Irwin-Hall distribution */
-double rnd_dist_irwin_hall_left(rnd_t rnd, unsigned n, double low, 
-				double high);
+double rnd_dist_irwin_hall_left(rnd_t rnd, unsigned n, double low,
+								double high);
 
 /* Generate double (low,high) in right half of Irwin-Hall distribution */
-double rnd_dist_irwin_hall_right(rnd_t rnd, unsigned n, double low, 
-				double high);
+double rnd_dist_irwin_hall_right(rnd_t rnd, unsigned n, double low,
+								 double high);
 
 /*
  * Discrete Distributions

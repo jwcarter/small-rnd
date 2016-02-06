@@ -27,27 +27,32 @@ static char *put_ul(char *cur, uint32_t v)
 char *rnd_state_to_string(rnd_t rnd)
 {
 	unsigned i;
-	unsigned size = rnd_get_state_size();
-	uint32_t *state = malloc(size);
-	char *state_str = malloc(2*size+1);
-	char * cur = state_str;
+	unsigned size = rnd_get_state_size_bytes();
+	uint32_t *state;
+	char *state_str;
+	char * cur;
 
 	if (!rnd) {
-		return NULL;
+		fprintf(stderr,"rnd: No generator state!");
+		exit(-1);
 	}
 
-	if (!state || !state_str) {
+	state = rnd_get_state(rnd);
+
+	state_str = malloc(2*size+1);
+	if (!state_str) {
 		fprintf(stderr,"rnd: Malloc failed!");
 		exit(-1);
 	}
 
-	rnd_get_state(rnd, state);
-
+	cur = state_str;
 	for (i=0; i<size/sizeof(uint32_t); i++) {
 		cur = put_ul(cur, state[i]);
 	}
-	
+
 	*cur = '\0';
+
+	rnd_free_state(state);
 
 	return state_str;
 }
@@ -92,23 +97,33 @@ void rnd_string_to_state(rnd_t rnd, char *state_str)
 {
 	unsigned i;
 	char * cur = state_str;
-	unsigned size = rnd_get_state_size(rnd);
-	uint32_t *state = malloc(size);
+	unsigned size = rnd_get_state_size_bytes();
+	unsigned size32 = rnd_get_state_size_u32();
+	uint32_t *state;
 
-	if (!rnd || !state_str) {
-		return;
+	if (!rnd) {
+		fprintf(stderr,"rnd: No generator state!");
+		exit(-1);
 	}
 
+	if (!state_str) {
+		fprintf(stderr,"rnd: No state string was passed!");
+		exit(-1);
+	}
+
+	state = malloc(size);
 	if (!state) {
 		fprintf(stderr,"rnd: Malloc failed!");
 		exit(-1);
 	}
 
-	for (i=0; i<size/sizeof(uint32_t); i++) {
+	for (i=0; i<size32; i++) {
 		cur = get_ul(state_str, cur, &state[i]);
 	}
 
-	rnd_set_state(rnd, state);
+	rnd_set_state(rnd, state, size);
+
+	free(state);
 }
 
 void rnd_free_state_str(char *state_str)
@@ -164,7 +179,7 @@ double rnd_dist_triangle_right(rnd_t rnd, double low, double high)
 	return x*(high-low)+low;
 }
 
-double rnd_dist_triangle_skewed(rnd_t rnd, double low, double high, 
+double rnd_dist_triangle_skewed(rnd_t rnd, double low, double high,
 				double mode)
 {
 /* Return double (low,high) in skewed triangular distribution
@@ -202,7 +217,7 @@ double rnd_dist_irwin_hall(rnd_t rnd, unsigned n, double low, double high)
 	return rnd_double_n(rnd,n)/(double)n*(high-low)+low;
 }
 
-double rnd_dist_irwin_hall_left(rnd_t rnd, unsigned n, double low, 
+double rnd_dist_irwin_hall_left(rnd_t rnd, unsigned n, double low,
 				double high)
 {
 /* Return double (low,high) in left half of Irwin-Hall distribution */
@@ -211,7 +226,7 @@ double rnd_dist_irwin_hall_left(rnd_t rnd, unsigned n, double low,
 	return (x+1.0)*(high-low)+low;
 }
 
-double rnd_dist_irwin_hall_right(rnd_t rnd, unsigned n, double low, 
+double rnd_dist_irwin_hall_right(rnd_t rnd, unsigned n, double low,
 				double high)
 {
 /* Return double (low,high) in right half of Irwin-Hall distribution */

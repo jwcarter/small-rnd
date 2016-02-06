@@ -50,32 +50,77 @@ void rnd_test(rnd_t rnd)
 	printf("rnd max64: %llu\n",max64);
 	printf("\n");
 
-	printf("state size = %u\n\n",rnd_get_state_size());
+	printf("state size = %u bytes\n\n",rnd_get_state_size_bytes());
 
-	printf("Setting state with string (Size right for MWC32 lag 2)\n");
-	state_str = "345678901abcdef22fedcba1"; /* MWC60 use only lower 30bits */
+	printf("Setting state with string (4 bytes)\n");
+	state_str = "12345678";
 	printf("In : %s\n",state_str);
 	rnd_string_to_state(rnd, state_str);
 	state_str = rnd_state_to_string(rnd);
 	printf("Out: %s\n\n",state_str);
 
-	printf("Setting state with string (Size right for MWC60 lag 3)\n");
-	state_str = "34567890098765431abcdef22fedcba134567890098765431abcdef22fedcba1";
+	printf("Setting state with string (40 bytes)\n");
+	state_str = "12345678a1a2a3a4b1b2b3b4c1c2c3c4d1d2d3d4e1e2e3e4f1f2f3f4A5A6A7A8B5B6B7B8C5C6C7C8";
 	printf("In : %s\n",state_str);
 	rnd_string_to_state(rnd, state_str);
 	state_str = rnd_state_to_string(rnd);
 	printf("Out: %s\n\n",state_str);
+
+	printf("Setting state with array (4 bytes)\n");
+	size = sizeof(uint32_t);
+	state = malloc(size);
+	state[0] = 0x12345678UL;
+	printf("In : %0x\n",state[0]);
+	rnd_set_state(rnd, state, size);
+	free(state);
+	state = rnd_get_state(rnd);
+	size = rnd_get_state_size_u32();
+	printf("Out: ");
+	for (i=0; i<size; i++) {
+		printf("%0x",state[i]);
+	}
+	printf("\n\n");
+	rnd_free_state(state);
+
+	printf("Setting state with array (40 bytes)\n");
+	size = sizeof(uint32_t)*10;
+	state = malloc(size);
+	state[0] = 0x12345678UL;
+	state[1] = 0xa1a2a3a4UL;
+	state[2] = 0xb1b2b3b4UL;
+	state[3] = 0xc1c2c3c4UL;
+	state[4] = 0xd1d2d3d4UL;
+	state[5] = 0xe1e2e3e4UL;
+	state[6] = 0xf1f2f3f4UL;
+	state[7] = 0xA5A6A7A8UL;
+	state[8] = 0xB5B6B7B8UL;
+	state[9] = 0xC5C6C7C8UL;
+	printf("In : ");
+	for (i=0; i<12; i++) {
+		printf("%0x",state[i]);
+	}
+	printf("\n");
+	rnd_set_state(rnd, state, size);
+	free(state);
+	state = rnd_get_state(rnd);
+	size = rnd_get_state_size_u32();
+	printf("Out: ");
+	for (i=0; i<size; i++) {
+		printf("%0x",state[i]);
+	}
+	printf("\n\n");
+	rnd_free_state(state);
 
 	rnd_init(rnd, (unsigned long)time(NULL));
 	printf("Getting state\n");
-	state = malloc(size);
-	size = rnd_get_state_size();
-	rnd_get_state(rnd, state);
+	size = rnd_get_state_size_u32();
+	state = rnd_get_state(rnd);
 	printf("From array : ");
-	for (i=0; i<size/sizeof(uint32_t); i++) {
+	for (i=0; i<size; i++) {
 		printf("%08lx",state[i]);
 	}
 	printf("\n");
+	rnd_free_state(state);
 	state_str = rnd_state_to_string(rnd);
 	printf("From string: %s\n\n",state_str);
 
@@ -86,10 +131,10 @@ void rnd_test(rnd_t rnd)
 		dt += rnd_unsigned32(rnd);
 	}
 	stop = clock();
-	printf("Avg=%.0f (Expected: %.0f) (Time: %5.3f)\n\n", 
-					dt/TEST_SIZE, (double)max32/2.0, 
+	printf("Avg=%.0f (Expected: %.0f) (Time: %5.3f)\n\n",
+					dt/TEST_SIZE, (double)max32/2.0,
 					((double)(stop-start)/CLOCKS_PER_SEC));
-	
+
 	printf("Testing rnd_unsigned64\n");
 	dt  = 0.0;
 	start = clock();
@@ -97,8 +142,8 @@ void rnd_test(rnd_t rnd)
 		dt += rnd_unsigned64(rnd);
 	}
 	stop = clock();
-	printf("Avg=%.0f (Expected: %.0f) (Time: %5.3f)\n\n", 
-					dt/TEST_SIZE, (double)max64/2.0, 
+	printf("Avg=%.0f (Expected: %.0f) (Time: %5.3f)\n\n",
+					dt/TEST_SIZE, (double)max64/2.0,
 					((double)(stop-start)/CLOCKS_PER_SEC));
 
 	printf("Testing rnd_closed\n");
@@ -108,8 +153,8 @@ void rnd_test(rnd_t rnd)
 		dt += rnd_closed(rnd);
 	}
 	stop = clock();
-	printf("Avg=%7.5f (Expected: %7.5f) (Time: %5.3f)\n\n", 
-					dt/TEST_SIZE, 0.5, 
+	printf("Avg=%7.5f (Expected: %7.5f) (Time: %5.3f)\n\n",
+					dt/TEST_SIZE, 0.5,
 					((double)(stop-start)/CLOCKS_PER_SEC));
 
 	printf("Testing rnd_double\n");
@@ -119,8 +164,8 @@ void rnd_test(rnd_t rnd)
 		dt += rnd_double(rnd);
 	}
 	stop = clock();
-	printf("Avg=%7.5f (Expected: %7.5f) (Time: %5.3f)\n\n", 
-					dt/TEST_SIZE, 0.5, 
+	printf("Avg=%7.5f (Expected: %7.5f) (Time: %5.3f)\n\n",
+					dt/TEST_SIZE, 0.5,
 					((double)(stop-start)/CLOCKS_PER_SEC));
 
 	printf("Testing rnd_int\n");
@@ -132,8 +177,8 @@ void rnd_test(rnd_t rnd)
 		total += r;
 	}
 	stop = clock();
-	printf("Range: %d-%d: Avg=%5.3f (Expected: %5.3f) (Time: %5.3f)\n", 
-					0, 19, (double)total/TEST_SIZE, (0+19)/2.0, 
+	printf("Range: %d-%d: Avg=%5.3f (Expected: %5.3f) (Time: %5.3f)\n",
+					0, 19, (double)total/TEST_SIZE, (0+19)/2.0,
 					((double)(stop-start)/CLOCKS_PER_SEC));
 	print_dist(0, 19, dist);
 
@@ -148,8 +193,8 @@ void rnd_test(rnd_t rnd)
 		total += r;
 	}
 	stop = clock();
-	printf("Range: %d-%d: Avg=%5.3f (Expected: %5.3f) (Time: %5.3f)\n", 
-					3, 18, (double)total/TEST_SIZE, (3+18)/2.0, 
+	printf("Range: %d-%d: Avg=%5.3f (Expected: %5.3f) (Time: %5.3f)\n",
+					3, 18, (double)total/TEST_SIZE, (3+18)/2.0,
 					((double)(stop-start)/CLOCKS_PER_SEC));
 	print_dist(0, 19, dist);
 
@@ -164,8 +209,8 @@ void rnd_test(rnd_t rnd)
 		total += r;
 	}
 	stop = clock();
-	printf("Range: %d-%d: Avg=%5.3f (Expected: %5.3f) (Time: %5.3f)\n", 
-					1, 18, (double)total/TEST_SIZE, (1+18)/2.0, 
+	printf("Range: %d-%d: Avg=%5.3f (Expected: %5.3f) (Time: %5.3f)\n",
+					1, 18, (double)total/TEST_SIZE, (1+18)/2.0,
 					((double)(stop-start)/CLOCKS_PER_SEC));
 	print_dist(0, 19, dist);
 
@@ -181,7 +226,7 @@ void rnd_test(rnd_t rnd)
 	}
 	stop = clock();
 	printf("Range: %d-%d: Avg=%5.3f (Expected: %5.3f) (Time: %5.3f)\n",
-					0, 19, (double)dt/TEST_SIZE, (0+20)/2.0, 
+					0, 19, (double)dt/TEST_SIZE, (0+20)/2.0,
 					((double)(stop-start)/CLOCKS_PER_SEC));
 	print_dist(0, 19, dist);
 
