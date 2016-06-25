@@ -5,6 +5,21 @@
 
 #include "rnd.h"
 
+struct rnd *rnd_new()
+{
+	unsigned size = rnd_get_state_size_bytes();
+	rnd_t rnd = malloc(size);
+	if (!rnd) {
+		fprintf(stderr,"rnd: Malloc failed!");
+		exit(-1);
+	}
+	return rnd;
+}
+
+void rnd_free(rnd_t rnd)
+{
+	free(rnd);
+}
 
 static char *put_ul(char *cur, uint32_t v)
 {

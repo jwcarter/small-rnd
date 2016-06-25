@@ -46,20 +46,6 @@ static inline uint64_t next_rnd(struct rnd *rnd)
 	return x1 + x2;
 }
 
-/*
- * Creation, Initialization, and Destruction
- */
-
-struct rnd *rnd_new()
-{
-	struct rnd *rnd = malloc(sizeof(struct rnd));
-	if (!rnd) {
-		fprintf(stderr,"rnd: Malloc failed!");
-		exit(-1);
-	}
-	return rnd;
-}
-
 #define Z1 4078645709ULL /* K6: LCG: 77999 * 52291 */
 #define Z2 3580663381ULL /* K7: LCG: 68111 * 52571 */
 #define MASK(x) ((x)&0x7FFFFFFF3FFFFFFFULL)
@@ -135,15 +121,6 @@ void rnd_set_state(struct rnd *rnd, uint32_t state[], unsigned size)
 	rnd->s1 = SL32(a[0]) | a[1];
 	rnd->s2 = SL32(a[2]) | a[3];
 }
-
-void rnd_free(struct rnd *rnd)
-{
-	free(rnd);
-}
-
-/*
- * Random Numbers
- */
 
 #define H52(x) ((x)>>12)
 #define UMAX52 4503599627370495ULL
