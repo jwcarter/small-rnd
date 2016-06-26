@@ -1,7 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
-#include <float.h>
 
 /* rnd127 - Pseudorandom number generator with period ~2^127
  *
@@ -54,7 +53,7 @@ void rnd_init(struct rnd *rnd, unsigned long seed)
 {
 	int i;
 	uint64_t x = seed*Z1 + seed*Z2 + Z1*Z2 + Z2;
-	x = (x == 0) ? x : Z1;
+	x = (MASK(x) != 0) ? x : Z1;
 	rnd->s1 = MASK(x);
 	rnd->s2 = x*Z1 + x*Z2 + Z1*Z2 + Z1;
 	for (i=0; i<11; i++)
@@ -65,7 +64,6 @@ unsigned rnd_get_state_size_bytes()
 {
 	return (sizeof (struct rnd));
 }
-
 
 void rnd_get_state(struct rnd *rnd, uint32_t state[])
 {
@@ -83,12 +81,11 @@ void rnd_set_state(struct rnd *rnd, uint32_t state[])
 	rnd->s2 = SL32(state[2]) | state[3];
 }
 
+#define INV52M1 2.2204460492503135739e-16 /* 1/(2^52-1) */
+#define INV52P1 2.2204460492503125878e-16 /* 1/(2^52+1) */
 #define H52(x) ((x)>>12)
-#define UMAX52 4503599627370495ULL
-#define HIGH_OPEN (1.0 - DBL_EPSILON)
-#define LOW_OPEN (DBL_EPSILON)
-#define CLOSED(x) (((double)(x))/((double)(UMAX52)))
-#define OPEN(x) (CLOSED(x)*(HIGH_OPEN-LOW_OPEN)+LOW_OPEN)
+#define CLOSED(x) ((double)H52(x)*INV52M1)
+#define OPEN(x) ((double)(H52(x)+1)*INV52P1)
 
 uint32_t rnd_u32(struct rnd *rnd)
 {
@@ -103,11 +100,11 @@ uint64_t rnd_u64(struct rnd *rnd)
 double rnd_closed(struct rnd *rnd)
 {
 	/* Return double [0,1] in continuous uniform distribution */
-	return CLOSED(H52(next_rnd(rnd)));
+	return CLOSED(next_rnd(rnd));
 }
 
 double rnd_open(struct rnd *rnd)
 {
 	/* Return double (0,1) in continuous uniform distribution */
-	return OPEN(H52(next_rnd(rnd)));
+	return OPEN(next_rnd(rnd));
 }
