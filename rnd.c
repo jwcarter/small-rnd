@@ -21,6 +21,63 @@ void rnd_free(rnd_t rnd)
 	free(rnd);
 }
 
+unsigned rnd_get_state_size_u32()
+{
+	return rnd_get_state_size_bytes()/(sizeof (uint32_t));
+}
+
+uint32_t *rnd_state_to_array(rnd_t rnd)
+{
+	unsigned size = rnd_get_state_size_bytes();
+	uint32_t *state = malloc(size);
+	if (!state) {
+		fprintf(stderr,"rnd: Malloc failed!");
+		exit(-1);
+	}
+
+	rnd_get_state(rnd, state);
+
+	return state;
+}
+
+void rnd_array_to_state(rnd_t rnd, uint32_t state[], unsigned size)
+{
+	unsigned size_bytes = rnd_get_state_size_bytes();
+	unsigned size_u32 = rnd_get_state_size_u32();
+	unsigned s32,i,j;
+
+	uint32_t *s = malloc(size_bytes);
+	if (!s) {
+		fprintf(stderr,"rnd: Malloc failed!");
+		exit(-1);
+	}
+
+	s32 = size/(sizeof(uint32_t));
+	if (s32 > size_u32)
+		s32 = size_u32;
+	if (s32 == 0) {
+		fprintf(stderr,"rnd: No state passed");
+		exit(-1);
+	}
+	i=j=0;
+	while (i < size_u32) {
+		s[i] = state[j];
+		i++;
+		j++;
+		if (j >= s32)
+			j=0;
+	}
+
+	rnd_set_state(rnd, s);
+
+	free(s);
+}
+
+void rnd_free_state_array(uint32_t *state)
+{
+	free(state);
+}
+
 static char *put_ul(char *cur, uint32_t v)
 {
 	unsigned i;
@@ -52,7 +109,7 @@ char *rnd_state_to_string(rnd_t rnd)
 		exit(-1);
 	}
 
-	state = rnd_get_state(rnd);
+	state = rnd_state_to_array(rnd);
 
 	state_str = malloc(2*size+1);
 	if (!state_str) {
@@ -67,7 +124,7 @@ char *rnd_state_to_string(rnd_t rnd)
 
 	*cur = '\0';
 
-	rnd_free_state(state);
+	rnd_free_state_array(state);
 
 	return state_str;
 }
@@ -136,7 +193,7 @@ void rnd_string_to_state(rnd_t rnd, char *state_str)
 		cur = get_ul(state_str, cur, &state[i]);
 	}
 
-	rnd_set_state(rnd, state, size);
+	rnd_array_to_state(rnd, state, size);
 
 	free(state);
 }

@@ -61,65 +61,26 @@ void rnd_init(struct rnd *rnd, unsigned long seed)
 		next_rnd(rnd);
 }
 
-#define RND_STATE_SIZE_BYTES (sizeof(struct rnd))
-
 unsigned rnd_get_state_size_bytes()
 {
-	return RND_STATE_SIZE_BYTES;
+	return (sizeof (struct rnd));
 }
 
-#define RND_STATE_SIZE_U32 (RND_STATE_SIZE_BYTES/(sizeof (uint32_t)))
 
-unsigned rnd_get_state_size_u32()
+void rnd_get_state(struct rnd *rnd, uint32_t state[])
 {
-	return RND_STATE_SIZE_U32;
-}
-
-uint32_t *rnd_get_state(struct rnd *rnd)
-{
-	uint32_t *state = malloc(RND_STATE_SIZE_BYTES);
-	if (!state) {
-		fprintf(stderr,"rnd: Malloc failed!");
-		exit(-1);
-	}
 	state[0] = H32(rnd->s1);
 	state[1] = L32(rnd->s1);
 	state[2] = H32(rnd->s2);
 	state[3] = L32(rnd->s2);
-
-	return state;
-}
-
-void rnd_free_state(uint32_t *state)
-{
-	free(state);
 }
 
 #define SL32(x) ((uint64_t)(x)<<32)
 
-void rnd_set_state(struct rnd *rnd, uint32_t state[], unsigned size)
+void rnd_set_state(struct rnd *rnd, uint32_t state[])
 {
-	unsigned s32,i,j;
-	uint32_t a[RND_STATE_SIZE_U32];
-
-	s32 = size/(sizeof(uint32_t));
-	if (s32 > RND_STATE_SIZE_U32)
-		s32 = RND_STATE_SIZE_U32;
-	if (s32 == 0) {
-		fprintf(stderr,"rnd: No state passed");
-		exit(-1);
-	}
-	i=j=0;
-	while (i < RND_STATE_SIZE_U32) {
-		a[i] = state[j];
-		i++;
-		j++;
-		if (j >= s32)
-			j=0;
-	}
-	
-	rnd->s1 = SL32(a[0]) | a[1];
-	rnd->s2 = SL32(a[2]) | a[3];
+	rnd->s1 = SL32(state[0]) | state[1];
+	rnd->s2 = SL32(state[2]) | state[3];
 }
 
 #define H52(x) ((x)>>12)

@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <math.h>
 #include <time.h> /* Use time() for initializing random seed */
-
+#include <float.h>
 #include "rnd.h"
 
 #define TEST_SIZE 10000000
@@ -27,6 +27,27 @@ static void print_dist(int min, int max, int dist[])
 		k=k+20;
 	} while (j <= max);
 }
+
+void print_state(rnd_t rnd)
+{
+	int i;
+	unsigned size;
+	uint32_t *state;
+	char *state_str;
+
+	state_str = rnd_state_to_string(rnd);
+	printf("Out: %s [String]\n",state_str);
+	rnd_free_state_str(state_str);
+	state = rnd_state_to_array(rnd);
+	size = rnd_get_state_size_u32();
+	printf("Out: ");
+	for (i=0; i<size; i++) {
+		printf("%0x",state[i]);
+	}
+	printf(" [Array]\n\n");
+	rnd_free_state_array(state);
+}
+
 
 #define MAX_TEST 32
 void rnd_test(rnd_t rnd)
@@ -56,31 +77,22 @@ void rnd_test(rnd_t rnd)
 	state_str = "12345678";
 	printf("In : %s\n",state_str);
 	rnd_string_to_state(rnd, state_str);
-	state_str = rnd_state_to_string(rnd);
-	printf("Out: %s\n\n",state_str);
+	print_state(rnd);
 
 	printf("Setting state with string (40 bytes)\n");
 	state_str = "12345678a1a2a3a4b1b2b3b4c1c2c3c4d1d2d3d4e1e2e3e4f1f2f3f4A5A6A7A8B5B6B7B8C5C6C7C8";
 	printf("In : %s\n",state_str);
 	rnd_string_to_state(rnd, state_str);
-	state_str = rnd_state_to_string(rnd);
-	printf("Out: %s\n\n",state_str);
+	print_state(rnd);
 
 	printf("Setting state with array (4 bytes)\n");
 	size = sizeof(uint32_t);
 	state = malloc(size);
 	state[0] = 0x12345678UL;
 	printf("In : %0x\n",state[0]);
-	rnd_set_state(rnd, state, size);
+	rnd_array_to_state(rnd, state, size);
 	free(state);
-	state = rnd_get_state(rnd);
-	size = rnd_get_state_size_u32();
-	printf("Out: ");
-	for (i=0; i<size; i++) {
-		printf("%0x",state[i]);
-	}
-	printf("\n\n");
-	rnd_free_state(state);
+	print_state(rnd);
 
 	printf("Setting state with array (40 bytes)\n");
 	size = sizeof(uint32_t)*10;
@@ -96,33 +108,17 @@ void rnd_test(rnd_t rnd)
 	state[8] = 0xB5B6B7B8UL;
 	state[9] = 0xC5C6C7C8UL;
 	printf("In : ");
-	for (i=0; i<12; i++) {
+	for (i=0; i<10; i++) {
 		printf("%0x",state[i]);
 	}
 	printf("\n");
-	rnd_set_state(rnd, state, size);
+	rnd_array_to_state(rnd, state, size);
 	free(state);
-	state = rnd_get_state(rnd);
-	size = rnd_get_state_size_u32();
-	printf("Out: ");
-	for (i=0; i<size; i++) {
-		printf("%0x",state[i]);
-	}
-	printf("\n\n");
-	rnd_free_state(state);
+	print_state(rnd);
 
+	printf("Initializing state with rnd_int() using time\n");
 	rnd_init(rnd, (unsigned long)time(NULL));
-	printf("Getting state\n");
-	size = rnd_get_state_size_u32();
-	state = rnd_get_state(rnd);
-	printf("From array : ");
-	for (i=0; i<size; i++) {
-		printf("%08lx",state[i]);
-	}
-	printf("\n");
-	rnd_free_state(state);
-	state_str = rnd_state_to_string(rnd);
-	printf("From string: %s\n\n",state_str);
+	print_state(rnd);
 
 	printf("Testing rnd_unsigned32\n");
 	dt  = 0.0;
