@@ -6,7 +6,7 @@
 #include <float.h>
 #include "rnd.h"
 
-#define TEST_SIZE 10000000
+#define TEST_SIZE 100000000
 
 static void print_dist(int min, int max, int dist[])
 {
@@ -120,22 +120,22 @@ void rnd_test(rnd_t rnd)
 	rnd_init(rnd, (unsigned long)time(NULL));
 	print_state(rnd);
 
-	printf("Testing rnd_unsigned32\n");
+	printf("Testing rnd_u32\n");
 	dt  = 0.0;
 	start = clock();
 	for (i=0; i < TEST_SIZE; i++) {
-		dt += rnd_unsigned32(rnd);
+		dt += rnd_u32(rnd);
 	}
 	stop = clock();
 	printf("Avg=%.0f (Expected: %.0f) (Time: %5.3f)\n\n",
 					dt/TEST_SIZE, (double)max32/2.0,
 					((double)(stop-start)/CLOCKS_PER_SEC));
 
-	printf("Testing rnd_unsigned64\n");
+	printf("Testing rnd_u64\n");
 	dt  = 0.0;
 	start = clock();
 	for (i=0; i < TEST_SIZE; i++) {
-		dt += rnd_unsigned64(rnd);
+		dt += rnd_u64(rnd);
 	}
 	stop = clock();
 	printf("Avg=%.0f (Expected: %.0f) (Time: %5.3f)\n\n",
@@ -153,11 +153,11 @@ void rnd_test(rnd_t rnd)
 					dt/TEST_SIZE, 0.5,
 					((double)(stop-start)/CLOCKS_PER_SEC));
 
-	printf("Testing rnd_double\n");
+	printf("Testing rnd_open\n");
 	dt = 0.0;
 	start = clock();
 	for (i=0; i < TEST_SIZE; i++) {
-		dt += rnd_double(rnd);
+		dt += rnd_open(rnd);
 	}
 	stop = clock();
 	printf("Avg=%7.5f (Expected: %7.5f) (Time: %5.3f)\n\n",

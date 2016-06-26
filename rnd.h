@@ -36,23 +36,16 @@ uint32_t rnd_max32();
 uint64_t rnd_max64();
 
 /* Max value is 2^32-1 (4294967295) */
-uint32_t rnd_unsigned32(rnd_t rnd);
+uint32_t rnd_u32(rnd_t rnd);
 
 /* Max value is 2^64-1 (18446744073709551615) */
-uint64_t rnd_unsigned64(rnd_t rnd);
+uint64_t rnd_u64(rnd_t rnd);
 
 /* Return double [0,1] in continuous uniform distribution */
 double rnd_closed(rnd_t rnd);
 
 /* Return double (0,1) in continuous uniform distribution */
-double rnd_double(rnd_t rnd);
-
-/* Return double (0,2) in continuous triangular distribution */
-double rnd_double_2(rnd_t rnd);
-
-/* Return double (0,n) in continuous irwin hall distribution */
-double rnd_double_n(rnd_t rnd, unsigned n);
-
+double rnd_open(rnd_t rnd);
 
 /*
  * Continuous Distributions

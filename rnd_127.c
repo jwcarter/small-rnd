@@ -88,16 +88,14 @@ void rnd_set_state(struct rnd *rnd, uint32_t state[])
 #define HIGH_OPEN (1.0 - DBL_EPSILON)
 #define LOW_OPEN (DBL_EPSILON)
 #define CLOSED(x) (((double)(x))/((double)(UMAX52)))
-#define OPEN1(x) (CLOSED(x)*(HIGH_OPEN-LOW_OPEN)+LOW_OPEN)
-#define OPEN2(x) (CLOSED(x)*(HIGH_OPEN-LOW_OPEN)+2.0*LOW_OPEN)
-#define OPENn(x,n) (CLOSED(x)*(HIGH_OPEN-LOW_OPEN)+(n)*LOW_OPEN)
+#define OPEN(x) (CLOSED(x)*(HIGH_OPEN-LOW_OPEN)+LOW_OPEN)
 
-uint32_t rnd_unsigned32(struct rnd *rnd)
+uint32_t rnd_u32(struct rnd *rnd)
 {
 	return H32(next_rnd(rnd));
 }
 
-uint64_t rnd_unsigned64(struct rnd *rnd)
+uint64_t rnd_u64(struct rnd *rnd)
 {
 	return next_rnd(rnd);
 }
@@ -108,25 +106,8 @@ double rnd_closed(struct rnd *rnd)
 	return CLOSED(H52(next_rnd(rnd)));
 }
 
-double rnd_double(struct rnd *rnd)
+double rnd_open(struct rnd *rnd)
 {
 	/* Return double (0,1) in continuous uniform distribution */
-	return OPEN1(H52(next_rnd(rnd)));
-}
-
-double rnd_double_2(struct rnd *rnd)
-{
-	/* Return double (0,2) in continuous triangular distribution */
-	return OPEN2((double)H52(next_rnd(rnd))+(double)H52(next_rnd(rnd)));
-}
-
-double rnd_double_n(struct rnd *rnd, unsigned n)
-{
-	/* Return double (0,n) in continuous irwin hall distribution */
-	unsigned i = n;
-	double x = 0;
-	for (i = 0; i<n; i++) {
-		x += H52(next_rnd(rnd));
-	}
-	return OPENn(x,n);
+	return OPEN(H52(next_rnd(rnd)));
 }
