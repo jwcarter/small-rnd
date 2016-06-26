@@ -42,7 +42,7 @@ void print_state(rnd_t rnd)
 	size = rnd_get_state_size_u32();
 	printf("Out: ");
 	for (i=0; i<size; i++) {
-		printf("%0x",state[i]);
+		printf("%08lx",state[i]);
 	}
 	printf(" [Array]\n\n");
 	rnd_free_state_array(state);
@@ -80,7 +80,7 @@ void rnd_test(rnd_t rnd)
 	print_state(rnd);
 
 	printf("Setting state with string (40 bytes)\n");
-	state_str = "12345678a1a2a3a4b1b2b3b4c1c2c3c4d1d2d3d4e1e2e3e4f1f2f3f4A5A6A7A8B5B6B7B8C5C6C7C8";
+	state_str = "01234567a1a2a3a4b1b2b3b4c1c2c3c4d1d2d3d4e1e2e3e4f1f2f3f4A5A6A7A8B5B6B7B8C5C6C7C8";
 	printf("In : %s\n",state_str);
 	rnd_string_to_state(rnd, state_str);
 	print_state(rnd);
