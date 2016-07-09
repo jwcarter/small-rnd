@@ -29,28 +29,29 @@ struct rnd {
 #define H32(x) ((x)>>32)
 #define L32(x) ((x)&0xFFFFFFFFUL)
 #define FLIP32(x) ((x)>>32 | (x)<<32)
-#define A  4294095429ULL /* K1: MWC L1: 3 * 13 * 110105011 */
-#define Y1 4078645709ULL /* K6: LCG: 77999 * 52291 */
-#define Y2 3580663381ULL /* K7: LCG: 68111 * 52571 */
+#define A  4294095429ULL /* MWC L1: 3 * 13 * 110105011 */
+#define Z1 4078645709ULL /* LCG: 77999 * 52291 */
+#define Z2 3580663381ULL /* LCG: 68111 * 52571 */
 							   
 static inline uint64_t next_rnd(struct rnd *rnd)
 {
 	uint64_t x1 = L32(rnd->s1)*A+H32(rnd->s1);
 	rnd->s1 = x1;
-	uint64_t y1 = Y1 * H32(x1);
-	uint64_t y2 = Y2 * L32(x1);
-	return y1 + FLIP32(y2);
+	uint64_t z1 = Z1 * H32(x1);
+	uint64_t z2 = Z2 * L32(x1);
+	return z1 + FLIP32(z2);
 }
 
-#define Z1 3571494541ULL /* K8: LCG: 91019 * 39239 */
-#define Z2 3753453877ULL /* K9: LCG: 13999 * 268123 */
-#define MASK(x) ((x)&0x7FFFFFFF3FFFFFFFULL)
+#define Z3 3571494541ULL /* LCG: 91019 * 39239 */
+#define Z4 3753453877ULL /* LCG: 13999 * 268123 */
+#define Z5 18277323205306182053ULL /* LCG: 26777 * 65777 * 78787 * 131711 */
+#define MASK(x) ((x)&0x3FFFFFFF7FFFFFFFULL)
 
 void rnd_init(struct rnd *rnd, unsigned long seed)
 {
 	int i;
-	uint64_t x = seed*Z1 + seed*Z2 + Z1*Z2 + Z2;
-	x = (MASK(x) != 0) ? x : Z1;
+	uint64_t x = seed*Z3 + seed*Z4 + Z5 + Z3;
+	x = (MASK(x) != 0) ? x : (Z5 + Z4);
 	rnd->s1 = MASK(x);
 	for (i=0; i<11; i++)
 		next_rnd(rnd);
@@ -74,8 +75,8 @@ void rnd_set_state(struct rnd *rnd, uint32_t state[])
 	rnd->s1 = SL32(state[0]) | state[1];
 }
 
-#define INV52M1 2.2204460492503135739e-16 /* 1/(2^52-1) */
-#define INV52P1 2.2204460492503125878e-16 /* 1/(2^52+1) */
+#define INV52M1 2.2204460492503136e-16 /* 1/(2^52-1) */
+#define INV52P1 2.2204460492503126e-16 /* 1/(2^52+1) */
 #define H52(x) ((x)>>12)
 #define CLOSED(x) ((double)H52(x)*INV52M1)
 #define OPEN(x) ((double)(H52(x)+1)*INV52P1)
