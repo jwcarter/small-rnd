@@ -379,7 +379,7 @@ static inline uint64_t next_mwc32_l3_r(struct state_mwc32_l3_r *state)
 	state->s2 = state->s3;
 	state->s3 = x;
 	state->c = H32(x);
-	return x + RR64(x,21);
+	return x + RR64(x,25);
 }
 
 static void init_mwc32_l3_r(struct state_mwc32_l3_r *state, uint32_t seed)
@@ -416,8 +416,8 @@ static inline uint64_t next_mwc32_l3_m2(struct state_mwc32_l3_m2 *state)
 	state->s2 = state->s3;
 	state->s3 = x;
 	state->c = H32(x);
-	uint64_t z1 = Z1 * H32(x^x<<17);
-	uint64_t z2 = Z2 * L32(x^x>>13);
+	uint64_t z1 = Z1 * H32(x);
+	uint64_t z2 = Z2 * L32(x);
 	return z1 + FLIP32(z2);
 }
 
@@ -476,6 +476,39 @@ static void init_xorshift128p(struct state_xorshift128p *state, uint32_t seed)
 	state->s2 = x;
 	for (i=0; i<11; i++)
 		next_xorshift128p(state);
+}
+
+/* xoroshiro128plus
+ * Based on xoroshiro128plus by David Blackman and Sebastiano Vigna
+ * See: http://xoroshiro.di.unimi.it/xoroshiro128plus.c
+ */
+struct state_xoroshiro {
+        uint64_t s1;
+        uint64_t s2;
+};
+
+static inline uint64_t next_xoroshiro(struct state_xoroshiro *state)
+{
+        const uint64_t s1 = state->s1;
+        uint64_t s2 = state->s2;
+        const uint64_t x = s1 + s2;
+        s2 ^= s1;
+        state->s1 = RL64(s1, 55) ^ s2 ^ (s2 << 14);
+        state->s2 = RL64(s2, 36);
+        return x;
+}
+
+static void init_xoroshiro(struct state_xoroshiro *state, uint32_t seed)
+{
+	int i;
+	uint64_t x = seed*Z1 + seed*Z2 + Z5 + Z3;
+	x = (x != 0) ? x : (Z5 + Z4);
+	state->s1 = x;
+	x = x*Z2 + x*Z3 + Z4;
+	x = (x != 0) ? x : (Z5 + Z1);
+	state->s2 = x;
+	for (i=0; i<11; i++)
+		next_xoroshiro(state);
 }
 
 /* MWC32 L6 M2 */
@@ -669,6 +702,8 @@ static void init_mwc60_l4_m2(struct state_mwc60_l4_m2 *state, uint32_t seed)
     }                                  \
 )
 
+/* gcc -O1 -fno-move-loop-invariants -fno-unroll-loops -o examples_64bit -lm examples_64bit.c */
+
 /* gcc -O1 -o examples_64bit -lm examples_64bit.c */
 int main (void)
 {
@@ -700,6 +735,7 @@ int main (void)
 	TEST_GEN(mwc32_l3_r, "MWC32 L3 R", 127);
 	TEST_GEN(mwc32_l3_m2, "MWC32 L3 *2", 127);
 	TEST_GEN(xorshift128p, "XORShift128+", 128);
+	TEST_GEN(xoroshiro, "xoroshiro128plus", 128);
 	TEST_GEN(mwc32_l6_m2, "MWC32 L6 *2", 223);
 	TEST_GEN(mwc32_x4, "MWC32 X4", 252);
 	TEST_GEN(mwc32_l7_m2, "MWC32 L7 *2", 255);
