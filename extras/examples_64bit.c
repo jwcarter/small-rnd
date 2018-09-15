@@ -31,6 +31,7 @@
 #define A6 4293666429ULL /* MWC L3: 3 * 13 * 110094011 */
 #define A7 4294748679ULL /* MWC L6: 3 * 13 * 110121761 */
 #define A8 4294258449ULL /* MWC L7: 3 * 13 * 110109191 */
+#define A9 4293082443ULL /* MWC L8: 3 * 13 * 110079037 */
 
 /* LCG 64: */
 #define A10 13624260627007768477ULL /* LCG64: 2621890429 * 5196350113 */
@@ -665,6 +666,43 @@ static void init_mwc32_l7_m2(struct state_mwc32_l7_m2 *state, uint32_t seed)
 		next_mwc32_l7_m2(state);
 }
 
+/* MWC32 L8 M2
+ */
+struct state_mwc32_l8_m2 {
+	uint8_t n;
+	uint32_t c;
+	uint32_t s[8];
+};
+
+static inline uint64_t next_mwc32_l8_m2(struct state_mwc32_l8_m2 *state)
+{
+	uint8_t n = 0x7&state->n;
+	uint64_t x = state->s[n]*A8+state->c;
+	state->s[n] = x;
+	state->c = H32(x);
+	state->n++;
+	uint64_t z1 = Z1 * H32(x);
+	uint64_t z2 = Z2 * L32(x);
+	return z1 + FLIP32(z2);
+}
+
+static void init_mwc32_l8_m2(struct state_mwc32_l8_m2 *state, uint32_t seed)
+{
+	int i;
+	uint32_t x = seed*Z1 + seed*Z2 + Z3;
+	state->n = 0x7&x;
+	x = x*Z1 + x*Z2 + Z5;
+	x = (L30(x) != 0) ? x : (Z5 + Z1);
+	state->c = L30(x);
+	for (i=0; i<8; i++) {
+		x = x*Z4 + x*Z3 + Z2;
+		x = (L31(x) != 0) ? x : (Z5 + Z1);
+		state->s[i] = L31(x);
+	}
+	for (i=0; i<11; i++)
+		next_mwc32_l8_m2(state);
+}
+
 /* MWC60 L4 M2 */
 struct state_mwc60_l4_m2 {
 	uint64_t s1;
@@ -772,6 +810,7 @@ int main (void)
 	TEST_GEN(mwc32_l6_m2, "MWC32 L6 *2", 223);
 	TEST_GEN(mwc32_x4, "MWC32 X4", 252);
 	TEST_GEN(mwc32_l7_m2, "MWC32 L7 *2", 255);
+	TEST_GEN(mwc32_l8_m2, "MWC32 L8 *2", 287);
 	TEST_GEN(mwc60_l4_m2, "MWC60 L4 *2", 299);
 
 	printf("\ntotal = %llu (So compiler won't optimize away the loops)\n",
