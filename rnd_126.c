@@ -59,7 +59,10 @@ static inline uint64_t next_rnd(struct rnd *rnd)
 	uint64_t x2 = L32(rnd->s2)*A2+H32(rnd->s2);
 	rnd->s1 = x1;
 	rnd->s2 = x2;
-	return x1 + x2;
+	uint64_t y = x1 + FLIP32(x2);
+	uint64_t z1 = Z1 * H32(y);
+	uint64_t z2 = Z2 * L32(y);
+	return z1 + FLIP32(z2);
 }
 
 #define Z1 4078645709ULL /* LCG: 77999 * 52291 */
