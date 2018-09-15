@@ -102,13 +102,13 @@ void rnd_set_state(struct rnd *rnd, uint32_t state[])
 
 #define INV52M1 2.2204460492503136e-16 /* 1/(2^52-1) */
 #define INV52P1 2.2204460492503126e-16 /* 1/(2^52+1) */
-#define H52(x) ((x)>>12)
-#define CLOSED(x) ((double)H52(x)*INV52M1)
-#define OPEN(x) ((double)(H52(x)+1)*INV52P1)
+#define L52(x) ((x)&0xFFFFFFFFFFFFFULL)
+#define CLOSED(x) ((double)L52(x)*INV52M1)
+#define OPEN(x) ((double)(L52(x)+1)*INV52P1)
 
 uint32_t rnd_u32(struct rnd *rnd)
 {
-	return H32(next_rnd(rnd));
+	return L32(next_rnd(rnd));
 }
 
 uint64_t rnd_u64(struct rnd *rnd)
