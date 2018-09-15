@@ -316,7 +316,7 @@ static inline uint64_t next_mwc32_x2(struct state_mwc32_x2 *state)
 	uint64_t x2 = L32(state->s2)*A2+H32(state->s2);
 	state->s1 = x1;
 	state->s2 = x2;
-	return x1 + x2;
+	return x1 + FLIP32(x2);
 }
 
 static void init_mwc32_x2(struct state_mwc32_x2 *state, uint32_t seed)
@@ -347,7 +347,7 @@ static inline uint64_t next_mwc32_x2_m2(struct state_mwc32_x2_m2 *state)
 	uint64_t x2 = L32(state->s2)*A2+H32(state->s2);
 	state->s1 = x1;
 	state->s2 = x2;
-	uint64_t y = x1 + x2;
+	uint64_t y = x1 + FLIP32(x2);
 	uint64_t z1 = Z1 * H32(y);
 	uint64_t z2 = Z2 * L32(y);
 	return z1 + FLIP32(z2);
