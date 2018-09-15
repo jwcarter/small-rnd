@@ -33,13 +33,14 @@ is very small for lag 2 and lag 3 generators.
 The rand_63.c generator uses a MWC32 generator with no lag. The new state
 X2 and C2 (where X2 is the lower 32-bits and C2 is the upper of a 64-bit
 number) are multipled with constants K1 and K2. The product of X2 and K1
-has its upper and lower 32bits swapped and then is added to the product of
+has its upper and lower 32 bits swapped and then is added to the product of
 C2 and K2 to make the new random number. This generator has a period of
 ~2^63.
 
 The rand_126.c generator uses two MWC32 generators with no lag. The new
-64 bits of state of each generator is added together to make the new
-random number. This generator has a period of ~2^126.
+64 bits of state of one generator has its upper and lower 32 bits swapped
+and then added to the new 64 bits of state of the other generator to make
+the new random number. This generator has a period of ~2^126.
 
 The rand_127.c generator uses a MWC32 generator with no lag and a AWC
 (Add with Carry) generator with no lag. The new state of the MWC32
@@ -89,3 +90,17 @@ gcc -lm -o rnd_test rnd.c rnd_127.c rnd_test.c
 
 To use rnd_255.c:
 gcc -lm -o rnd_test rnd.c rnd_255.c rnd_test.c
+
+======================================================================
+EXAMPLE GENERATORS
+======================================================================
+
+In the extras directory, there are examples of random number generators
+in examples_64bit.c.
+
+To build the examples:
+gcc -O1 -o examples_64bit -lm examples_64bit.c
+
+Running examples_64bit will run each generator 1,000,000,000 times and
+print the time it took. (Because, of course, this is the most important
+characterictic of a random number generator.)
