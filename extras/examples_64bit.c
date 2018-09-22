@@ -20,8 +20,11 @@
 #include <string.h>
 #include <limits.h>
 #include <stdint.h>
-
 #include <time.h> // For timing loop
+
+ // time_test() in different file to minimize optimization
+#include "timing_test.h"
+
 
 #define A1 4294095429ULL /* MWC L1: 3 * 13 * 110105011 */
 #define A2 4293977883ULL /* MWC L1: 3 * 13 * 110101997 */
@@ -87,8 +90,9 @@ struct state_mwc32_r {
 	uint64_t s1;
 };
 
-static inline uint64_t next_mwc32_r(struct state_mwc32_r *state)
+static inline uint64_t next_mwc32_r(void *s)
 {
+	struct state_mwc32_r *state = s;
 	uint64_t x = L32(state->s1)*A1+H32(state->s1);
 	state->s1 = x;
 	return x + RR64(x,25);
@@ -110,8 +114,9 @@ struct state_mwc32_m2_32 {
 	uint32_t c;
 };
 
-static inline uint64_t next_mwc32_m2_32(struct state_mwc32_m2_32 *state)
+static inline uint64_t next_mwc32_m2_32(void *s)
 {
+	struct state_mwc32_m2_32 *state = s;
 	uint64_t x = state->s1*A1+state->c;
 	state->s1 = x;
 	state->c = H32(x);
@@ -140,8 +145,9 @@ struct state_mwc32_m2_64 {
 	uint64_t s1;
 };
 
-static inline uint64_t next_mwc32_m2_64(struct state_mwc32_m2_64 *state)
+static inline uint64_t next_mwc32_m2_64(void *s)
 {
+	struct state_mwc32_m2_64 *state = s;
 	uint64_t x = L32(state->s1)*A1+H32(state->s1);
 	state->s1 = x;	
 	uint64_t z1 = Z1 * H32(x);
@@ -165,8 +171,9 @@ struct state_lcg64 {
   uint64_t s;
 };
 
-static inline uint64_t next_lcg64(struct state_lcg64 *state)
+static inline uint64_t next_lcg64(void *s)
 {
+	struct state_lcg64 *state = s;
   state->s = state->s*A10+C10;
   return state->s;
 }
@@ -192,7 +199,8 @@ struct state_smix64 {
 #define M1 0x9E3779B97F4A7C15ULL
 #define M2 0xBF58476D1CE4E5B9ULL
 #define M3 0x94D049BB133111EBULL
-static inline uint64_t next_smix64(struct state_smix64 *state) {
+static inline uint64_t next_smix64(void *s) {
+	struct state_smix64 *state = s;
 	uint64_t x = state->s + M1;
 	state->s = x;
 	uint64_t y = (x ^ (x >> 30)) * M2;
@@ -215,8 +223,9 @@ struct state_xorshift64 {
 	uint64_t s1;
 };
 
-static inline uint64_t next_xorshift64(struct state_xorshift64 *state)
+static inline uint64_t next_xorshift64(void *s)
 {
+	struct state_xorshift64 *state = s;
 	uint64_t x = state->s1;
 	x ^= x << 13;
 	x ^= x >> 17;
@@ -242,8 +251,9 @@ struct state_mwc32_l2_u2 {
 	uint32_t c;
 };
 
-static inline uint64_t next_mwc32_l2_u2(struct state_mwc32_l2_u2 *state)
+static inline uint64_t next_mwc32_l2_u2(void *s)
 {
+	struct state_mwc32_l2_u2 *state = s;
 	uint64_t x1 = state->s1*A5+state->c;
 	uint64_t x2 = state->s2*A5+H32(x1);
 	state->s1 = x1;
@@ -277,8 +287,9 @@ struct state_mwc32_l2_m2 {
 	uint32_t c;
 };
 
-static inline uint64_t next_mwc32_l2_m2(struct state_mwc32_l2_m2 *state)
+static inline uint64_t next_mwc32_l2_m2(void *s)
 {
+	struct state_mwc32_l2_m2 *state = s;
 	uint64_t x = state->s1*A5+state->c;
 	state->s1 = state->s2;
 	state->s2 = x;
@@ -310,8 +321,9 @@ struct state_mwc32_x2 {
 	uint64_t s2;
 };
 
-static inline uint64_t next_mwc32_x2(struct state_mwc32_x2 *state)
+static inline uint64_t next_mwc32_x2(void *s)
 {
+	struct state_mwc32_x2 *state = s;
 	uint64_t x1 = L32(state->s1)*A1+H32(state->s1);
 	uint64_t x2 = L32(state->s2)*A2+H32(state->s2);
 	state->s1 = x1;
@@ -341,8 +353,9 @@ struct state_mwc32_x2_m2 {
 	uint64_t s2;
 };
 
-static inline uint64_t next_mwc32_x2_m2(struct state_mwc32_x2_m2 *state)
+static inline uint64_t next_mwc32_x2_m2(void *s)
 {
+	struct state_mwc32_x2_m2 *state = s;
 	uint64_t x1 = L32(state->s1)*A1+H32(state->s1);
 	uint64_t x2 = L32(state->s2)*A2+H32(state->s2);
 	state->s1 = x1;
@@ -375,8 +388,9 @@ struct state_mwc32_awc64 {
 	uint64_t s2;
 };
 
-static inline uint64_t next_mwc32_awc64(struct state_mwc32_awc64 *state)
+static inline uint64_t next_mwc32_awc64(void *s)
 {
+	struct state_mwc32_awc64 *state = s;
 	uint64_t x1 = L32(state->s1)*A1+H32(state->s1);
 	uint64_t x2 = state->s2 + Z6;
 	state->s1 = x1;
@@ -406,8 +420,9 @@ struct state_mwc32_l3_r {
 	uint32_t c;
 };
 
-static inline uint64_t next_mwc32_l3_r(struct state_mwc32_l3_r *state)
+static inline uint64_t next_mwc32_l3_r(void *s)
 {
+	struct state_mwc32_l3_r *state = s;
 	uint64_t x = state->s1*A6+state->c;
 	state->s1 = state->s2;
 	state->s2 = state->s3;
@@ -443,8 +458,9 @@ struct state_mwc32_l3_m2 {
 	uint32_t c;
 };
 
-static inline uint64_t next_mwc32_l3_m2(struct state_mwc32_l3_m2 *state)
+static inline uint64_t next_mwc32_l3_m2(void *s)
 {
+	struct state_mwc32_l3_m2 *state = s;
 	uint64_t x = state->s1*A6+state->c;
 	state->s1 = state->s2;
 	state->s2 = state->s3;
@@ -486,8 +502,9 @@ struct state_xorshift128p {
 	uint64_t s2;
 };
 
-static inline uint64_t next_xorshift128p(struct state_xorshift128p *state)
+static inline uint64_t next_xorshift128p(void *s)
 {
+	struct state_xorshift128p *state = s;
 	/* xorshift128+ (A, B, C) = (23, 17, 26) */
 	uint64_t s1 = state->s1;
 	uint64_t s2 = state->s2;
@@ -521,15 +538,16 @@ struct state_xoroshiro {
         uint64_t s2;
 };
 
-static inline uint64_t next_xoroshiro(struct state_xoroshiro *state)
+static inline uint64_t next_xoroshiro(void *s)
 {
-        const uint64_t s1 = state->s1;
-        uint64_t s2 = state->s2;
-        const uint64_t x = s1 + s2;
-        s2 ^= s1;
-        state->s1 = RL64(s1, 55) ^ s2 ^ (s2 << 14);
-        state->s2 = RL64(s2, 36);
-        return x;
+	struct state_xoroshiro *state = s;
+	const uint64_t s1 = state->s1;
+	uint64_t s2 = state->s2;
+	const uint64_t x = s1 + s2;
+	s2 ^= s1;
+	state->s1 = RL64(s1, 55) ^ s2 ^ (s2 << 14);
+	state->s2 = RL64(s2, 36);
+	return x;
 }
 
 static void init_xoroshiro(struct state_xoroshiro *state, uint32_t seed)
@@ -553,8 +571,9 @@ struct state_mwc32_l6_m2 {
 };
 
 const uint8_t next6[6] = {1, 2, 3, 4, 5, 0};
-static inline uint64_t next_mwc32_l6_m2(struct state_mwc32_l6_m2 *state)
+static inline uint64_t next_mwc32_l6_m2(void *s)
 {
+	struct state_mwc32_l6_m2 *state = s;
 	uint8_t n = state->n;
 	uint64_t x = state->s[n]*A7+state->c;
 	state->s[n] = x;
@@ -590,8 +609,9 @@ struct state_mwc32_x4 {
 	uint64_t s4;
 };
 
-static inline uint64_t next_mwc32_x4(struct state_mwc32_x4 *state)
+static inline uint64_t next_mwc32_x4(void *s)
 {
+	struct state_mwc32_x4 *state = s;
 	uint64_t x1 = L32(state->s1)*A1+H32(state->s1);
 	uint64_t x2 = L32(state->s2)*A2+H32(state->s2);
 	uint64_t x3 = L32(state->s3)*A3+H32(state->s3);
@@ -637,8 +657,9 @@ struct state_mwc32_l7_m2 {
 };
 
 const uint8_t next7[7] = {1, 2, 3, 4, 5, 6, 0};
-static inline uint64_t next_mwc32_l7_m2(struct state_mwc32_l7_m2 *state)
+static inline uint64_t next_mwc32_l7_m2(void *s)
 {
+	struct state_mwc32_l7_m2 *state = s;
 	uint8_t n = state->n;
 	uint64_t x = state->s[n]*A8+state->c;
 	state->s[n] = x;
@@ -674,8 +695,9 @@ struct state_mwc32_l8_m2 {
 	uint32_t s[8];
 };
 
-static inline uint64_t next_mwc32_l8_m2(struct state_mwc32_l8_m2 *state)
+static inline uint64_t next_mwc32_l8_m2(void *s)
 {
+	struct state_mwc32_l8_m2 *state = s;
 	uint8_t n = 0x7&state->n;
 	uint64_t x = state->s[n]*A8+state->c;
 	state->s[n] = x;
@@ -712,11 +734,12 @@ struct state_mwc60_l4_m2 {
 	uint64_t c;
 };
 
-static inline uint64_t next_mwc60_l4_m2(struct state_mwc60_l4_m2 *state)
+static inline uint64_t next_mwc60_l4_m2(void *s)
 {
-	uint64_t s = state->s1;
-	uint64_t n1 = L30(s);
-	uint64_t n2 = SR30(s);
+	struct state_mwc60_l4_m2 *state = s;
+	uint64_t s1 = state->s1;
+	uint64_t n1 = L30(s1);
+	uint64_t n2 = SR30(s1);
 	uint64_t x1 = n1*AA1 + state->c;
 	uint64_t x2 = n1*AA2 + n2*AA1 + SR30(x1);
 	uint64_t x3 = n2*AA2 + SR30(x2);
@@ -753,44 +776,63 @@ static void init_mwc60_l4_m2(struct state_mwc60_l4_m2 *state, uint32_t seed)
 		next_mwc60_l4_m2(state);
 }
 
+/* DUMMY */
+struct state_dummy {
+	uint64_t s;
+};
+
+static inline uint64_t next_dummy(void *s)
+{
+	struct state_dummy *state = s;
+	return state->s;
+}
+
+static void init_dummy(struct state_dummy *state, uint32_t seed)
+{
+	state->s = seed;
+}
+
 
 #define NUM_TRIALS 1000000000
 
 #define TEST_GEN(type,name,period) (   \
-    {                                  \
+{                                      \
 	struct state_##type type;          \
     init_##type(&type, 12345);         \
-	total = 0;                         \
-	start = clock();                   \
-	for (i=0; i<NUM_TRIALS; i++) {     \
-		total += next_##type(&type);   \
-	}                                  \
-	stop = clock();                    \
+	dt = time_test(&type, NUM_TRIALS, &total, &next_##type);  \
 	grand_total += total;              \
-	dt2 = stop-start;                  \
-	printf("%25s  2^%-3d  %5.3f sec\n",name, period,\
-	       (double)(dt2-dt1)/((double)CLOCKS_PER_SEC));\
+    if (basetime == 0) {               \
+		printf("%25s  2^%-3d  %5.3f sec\n",name, period,      \
+	       (double)dt/((double)CLOCKS_PER_SEC));              \
+	} else {                           \
+		printf("%25s  2^%-3d  %5.3f sec %5.3f\n",name, period, \
+	       (double)(dt-basetime)/((double)CLOCKS_PER_SEC),    \
+           (double)dt/(double)basetime);					  \
     }                                  \
+}                                      \
 )
 
-/* gcc -O1 -fno-move-loop-invariants -fno-unroll-loops -o examples_64bit -lm examples_64bit.c */
+/* gcc -O1 -fno-move-loop-invariants -fno-unroll-loops -o examples_64bit -lm timing_test.c examples_64bit.c */
 
-/* gcc -O1 -o examples_64bit -lm examples_64bit.c */
+/* gcc -O1 -o examples_64bit -lm timing_test.c examples_64bit.c */
 int main (void)
 {
-	int start, stop, dt1, dt2;
-	unsigned i;
+	int dt, basetime;
 	uint64_t total = 0;
 	uint64_t grand_total = 0;
 
-	start = clock();
-	for (i=0; i<NUM_TRIALS; i++) {
-		total += i;
-	}
-	stop = clock();
-	grand_total += total;
-	dt1 = stop-start;
-	printf("time to add index: %5.3f\n\n",(double)dt1/((double)CLOCKS_PER_SEC));
+	printf("\n");
+
+	basetime = 0;
+	TEST_GEN(dummy, "DUMMY", 0);
+	basetime = dt;
+
+	printf("\n");
+	printf("d = Time for  DUMMY  to generate %llu numbers\n",NUM_TRIALS);
+	printf("t = Time for rnd_gen to generate %llu numbers\n",NUM_TRIALS);
+	printf("\n");
+	printf("%25s %6s %5s %9s\n", "Test", "Period", "t-d", "t/d");
+
 
 	TEST_GEN(mwc32_r, "MWC32 R", 63);
 	TEST_GEN(mwc32_m2_32, "MWC32 *2 (32)", 63);
