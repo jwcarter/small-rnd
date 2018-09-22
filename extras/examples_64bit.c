@@ -31,6 +31,7 @@
 #define A1C 4293477123ULL /* MWC L1: 3 * 13 * 110089157 */
 #define A1D 4268670393ULL /* MWC L1: 3 * 13 * 109453087 */
 #define A2A 4293538899ULL /* MWC L2: 3 * 13 * 110090741 */
+#define A2B 4291750983ULL /* MWC L2: 3 * 13 * 110044897 */
 #define A3A 4293666429ULL /* MWC L3: 3 * 13 * 110094011 */
 #define A6A 4294748679ULL /* MWC L6: 3 * 13 * 110121761 */
 #define A7A 4294258449ULL /* MWC L7: 3 * 13 * 110109191 */
@@ -563,6 +564,57 @@ static void init_xoroshiro(struct state_xoroshiro *state, uint32_t seed)
 		next_xoroshiro(state);
 }
 
+/* MWC32 L2 X2 with multiplication */
+struct state_mwc32_l2_x2_m2 {
+	uint32_t s1a;
+	uint32_t s1b;
+	uint32_t c1;
+	uint32_t s2a;
+	uint32_t s2b;
+	uint32_t c2;
+};
+
+static inline uint64_t next_mwc32_l2_x2_m2(void *s)
+{
+	struct state_mwc32_l2_x2_m2 *state = s;
+	uint64_t x1 = state->s1a*A2A+state->c1;
+	state->s1a = state->s1b;
+	state->s1b = x1;
+	state->c1 = H32(x1);
+	uint64_t x2 = state->s2a*A2B+state->c2;
+	state->s2a = state->s2b;
+	state->s2b = x2;
+	state->c2 = H32(x2);
+	uint64_t z1 = Z1 * H32(x1);
+	uint64_t z2 = Z2 * L32(x2);
+	return z1 + FLIP32(z2);
+}
+
+static void init_mwc32_l2_x2_m2(struct state_mwc32_l2_x2_m2 *state, uint32_t seed)
+{
+	int i;
+	uint32_t x = seed*Z1 + seed*Z2 + Z5 + Z3;
+	x = (L30(x) != 0) ? x : (Z5 + Z4);
+	state->c1 = L30(x);
+	x = x*Z2 + x*Z3 + Z1;
+	x = (L30(x) != 0) ? x : (Z5 + Z4);
+	state->c2 = L30(x);
+	x = x*Z3 + x*Z4 + Z2;
+	x = (L31(x) != 0) ? x : (Z5 + Z1);
+	state->s1a = L31(x);
+	x = x*Z4 + x*Z1 + Z3;
+	x = (L31(x) != 0) ? x : (Z5 + Z2);
+	state->s1b = L31(x);
+	x = x*Z1 + x*Z2 + Z4;
+	x = (L31(x) != 0) ? x : (Z5 + Z3);
+	state->s2a = L31(x);
+	x = x*Z2 + x*Z3 + Z1;
+	x = (L31(x) != 0) ? x : (Z5 + Z4);
+	state->s2b = L31(x);
+	for (i=0; i<11; i++)
+		next_mwc32_l2_x2_m2(state);
+}
+
 /* MWC32 L6 M2 */
 struct state_mwc32_l6_m2 {
 	uint8_t n;
@@ -849,6 +901,7 @@ int main (void)
 	TEST_GEN(mwc32_l3_m2, "MWC32 L3 *2", 127);
 	TEST_GEN(xorshift128p, "XORShift128+", 128);
 	TEST_GEN(xoroshiro, "xoroshiro128plus", 128);
+	TEST_GEN(mwc32_l2_x2_m2, "MWC32 L2 X2 *2", 190);
 	TEST_GEN(mwc32_l6_m2, "MWC32 L6 *2", 223);
 	TEST_GEN(mwc32_x4, "MWC32 X4", 252);
 	TEST_GEN(mwc32_l7_m2, "MWC32 L7 *2", 255);
