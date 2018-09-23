@@ -33,6 +33,7 @@
 #define A2A 4293538899ULL /* MWC L2: 3 * 13 * 110090741 */
 #define A2B 4291750983ULL /* MWC L2: 3 * 13 * 110044897 */
 #define A3A 4293666429ULL /* MWC L3: 3 * 13 * 110094011 */
+#define A3B 4293542019ULL /* MWC L3: 3 * 13 * 110090821 */
 #define A6A 4294748679ULL /* MWC L6: 3 * 13 * 110121761 */
 #define A7A 4294258449ULL /* MWC L7: 3 * 13 * 110109191 */
 #define A8A 4293082443ULL /* MWC L8: 3 * 13 * 110079037 */
@@ -698,6 +699,67 @@ static void init_mwc32_x4(struct state_mwc32_x4 *state, uint32_t seed)
 		next_mwc32_x4(state);
 }
 
+/* MWC32 L3 X2 M2 */
+struct state_mwc32_l3_x2_m2 {
+	uint32_t s1a;
+	uint32_t s1b;
+	uint32_t s1c;
+	uint32_t c1;
+	uint32_t s2a;
+	uint32_t s2b;
+	uint32_t s2c;
+	uint32_t c2;
+};
+
+static inline uint64_t next_mwc32_l3_x2_m2(void *s)
+{
+	struct state_mwc32_l3_x2_m2 *state = s;
+	uint64_t x1 = state->s1a*A3A+state->c1;
+	state->s1a = state->s1b;
+	state->s1b = state->s1c;
+	state->s1c = x1;
+	state->c1 = H32(x1);
+	uint64_t x2 = state->s2a*A3B+state->c2;
+	state->s2a = state->s2b;
+	state->s2b = state->s2c;
+	state->s2c = x2;
+	state->c2 = H32(x2);
+	uint64_t z1 = Z1 * H32(x1);
+	uint64_t z2 = Z2 * L32(x2);
+	return z1 + FLIP32(z2);
+}
+
+static void init_mwc32_l3_x2_m2(struct state_mwc32_l3_x2_m2 *state, uint32_t seed)
+{
+	int i;
+	uint32_t x = seed*Z1 + seed*Z2 + Z5 + Z3;
+	x = (L30(x) != 0) ? x : (Z5 + Z4);
+	state->c1 = L30(x);
+	x = x*Z1 + x*Z2 + Z3;
+	x = (L30(x) != 0) ? x : (Z5 + Z4);
+	state->c2 = L30(x);
+	x = x*Z2 + x*Z3 + Z4;
+	x = (L31(x) != 0) ? x : (Z5 + Z1);
+	state->s1a = L31(x);
+	x = x*Z3 + x*Z4 + Z1;
+	x = (L31(x) != 0) ? x : (Z5 + Z2);
+	state->s1b = L31(x);
+	x = x*Z4 + x*Z1 + Z2;
+	x = (L31(x) != 0) ? x : (Z5 + Z3);
+	state->s1c = L31(x);
+	x = x*Z2 + x*Z3 + Z4;
+	x = (L31(x) != 0) ? x : (Z5 + Z1);
+	state->s2a = L31(x);
+	x = x*Z3 + x*Z4 + Z1;
+	x = (L31(x) != 0) ? x : (Z5 + Z2);
+	state->s2b = L31(x);
+	x = x*Z4 + x*Z1 + Z2;
+	x = (L31(x) != 0) ? x : (Z5 + Z3);
+	state->s2c = L31(x);
+	for (i=0; i<11; i++)
+		next_mwc32_l3_x2_m2(state);
+}
+
 /* MWC32 L7 M2
  * Passes all of the tests of BigCrush.
  * Four 32-bit ranges tested: 64-33, 48-17, 32-1, and 16-49
@@ -904,6 +966,7 @@ int main (void)
 	TEST_GEN(mwc32_l2_x2_m2, "MWC32 L2 X2 *2", 190);
 	TEST_GEN(mwc32_l6_m2, "MWC32 L6 *2", 223);
 	TEST_GEN(mwc32_x4, "MWC32 X4", 252);
+	TEST_GEN(mwc32_l3_x2_m2, "MWC32 L3 X2 *2", 254);
 	TEST_GEN(mwc32_l7_m2, "MWC32 L7 *2", 255);
 	TEST_GEN(mwc32_l8_m2, "MWC32 L8 *2", 287);
 	TEST_GEN(mwc60_l4_m2, "MWC60 L4 *2", 299);
