@@ -565,6 +565,40 @@ static void init_xoroshiro(struct state_xoroshiro *state, uint32_t seed)
 		next_xoroshiro(state);
 }
 
+/* MWC32 X2 AWC64
+ */
+struct state_mwc32_x2_awc64 {
+	uint64_t s1;
+	uint64_t s2;
+	uint64_t s3;
+};
+
+static inline uint64_t next_mwc32_x2_awc64(void *s)
+{
+	struct state_mwc32_x2_awc64 *state = s;
+	uint64_t x1 = L32(state->s1)*A1A+H32(state->s1);
+	uint64_t x2 = L32(state->s2)*A1B+H32(state->s2);
+	uint64_t x3 = state->s3 + Z6;
+	state->s1 = x1;
+	state->s2 = x2;
+	state->s3 = x3;
+	return x1 + FLIP32(x2) + x3;
+}
+
+static void init_mwc32_x2_awc64(struct state_mwc32_x2_awc64 *state, uint32_t seed)
+{
+	int i;
+	uint64_t x = seed*Z1 + seed*Z2 + Z5 + Z1;
+	x = (MASK64(x) != 0) ? x : (Z5 + Z2);
+	state->s1 = MASK64(x);
+	x = x*Z3 + x*Z4 + Z2;
+	x = (MASK64(x) != 0) ? x : (Z5 + Z1);
+	state->s2 = MASK64(x);
+	state->s3 = x*Z1 + x*Z2 + Z3;
+	for (i=0; i<11; i++)
+		next_mwc32_x2_awc64(state);
+}
+
 /* MWC32 L2 X2 with multiplication */
 struct state_mwc32_l2_x2_m2 {
 	uint32_t s1a;
@@ -963,6 +997,7 @@ int main (void)
 	TEST_GEN(mwc32_l3_m2, "MWC32 L3 *2", 127);
 	TEST_GEN(xorshift128p, "XORShift128+", 128);
 	TEST_GEN(xoroshiro, "xoroshiro128plus", 128);
+	TEST_GEN(mwc32_x2_awc64, "MWC32 X2 AWC64", 190);
 	TEST_GEN(mwc32_l2_x2_m2, "MWC32 L2 X2 *2", 190);
 	TEST_GEN(mwc32_l6_m2, "MWC32 L6 *2", 223);
 	TEST_GEN(mwc32_x4, "MWC32 X4", 252);
