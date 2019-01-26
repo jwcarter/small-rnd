@@ -926,6 +926,47 @@ static void init_mwc60_l4_m2(struct state_mwc60_l4_m2 *state, uint32_t seed)
 		next_mwc60_l4_m2(state);
 }
 
+/* MWC32 L8 MAS32 M2
+ * MAS - Modular Addition Sequence
+ */
+struct state_mwc32_l8_mas_m2 {
+	uint32_t s1[8];
+	uint32_t s2;
+	uint32_t c;
+};
+
+static inline uint64_t next_mwc32_l8_mas_m2(void *s)
+{
+	struct state_mwc32_l8_mas_m2 *state = s;
+	uint32_t n = state->s2 & 0x7;
+	uint64_t x1 = state->s1[n]*A8A+state->c;
+	uint32_t x2 = state->s2 + Z6;
+	state->s1[n] = x1;
+	state->c = H32(x1);
+	state->s2 = x2;
+	uint64_t z1 = Z1 * (H32(x1) + x2);
+	uint64_t z2 = Z2 * L32(x1);
+	return z1 + FLIP32(z2);
+}
+
+static void init_mwc32_l8_mas_m2(struct state_mwc32_l8_mas_m2 *state,
+								 uint32_t seed)
+{
+	int i;
+	uint32_t x = seed*Z1 + Z7;
+	state->s2 = x;
+	x = x*Z2 + Z3;
+	x = (L30(x) != 0) ? x : Z8;
+	state->c = L30(x);
+	for (i=0; i<8; i++) {
+		x = x*Z4 + Z5;
+		x = (L31(x) != 0) ? x : Z9;
+		state->s1[i] = L31(x);
+	}
+	for (i=0; i<11; i++)
+		next_mwc32_l8_mas_m2(state);
+}
+
 /* DUMMY */
 struct state_dummy {
 	uint64_t s;
@@ -1007,6 +1048,7 @@ int main (void)
 	TEST_GEN(mwc32_l7_m2, "MWC32 L7 *2", 255);
 	TEST_GEN(mwc32_l8_m2, "MWC32 L8 *2", 287);
 	TEST_GEN(mwc60_l4_m2, "MWC60 L4 *2", 299);
+	TEST_GEN(mwc32_l8_mas_m2, "MWC32 L8 MAS *2", 319);
 
 	printf("\ntotal = %llu (So compiler won't optimize away the loops)\n",
 	       grand_total);
