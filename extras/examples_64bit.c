@@ -381,18 +381,19 @@ static void init_mwc32_x2_m2(struct state_mwc32_x2_m2 *state, uint32_t seed)
 		next_mwc32_x2_m2(state);
 }
 
-/* MWC32 AWC64
+/* MWC32 MAS64
+ * MAS - Modular Addtion Sequence
  * Passes all of the tests of BigCrush.
  * Four 32-bit ranges tested: 64-33, 48-17, 32-1, and 16-49
  */
-struct state_mwc32_awc64 {
+struct state_mwc32_mas64 {
 	uint64_t s1;
 	uint64_t s2;
 };
 
-static inline uint64_t next_mwc32_awc64(void *s)
+static inline uint64_t next_mwc32_mas64(void *s)
 {
-	struct state_mwc32_awc64 *state = s;
+	struct state_mwc32_mas64 *state = s;
 	uint64_t x1 = L32(state->s1)*A1A+H32(state->s1);
 	uint64_t x2 = state->s2 + Z6;
 	state->s1 = x1;
@@ -400,7 +401,7 @@ static inline uint64_t next_mwc32_awc64(void *s)
 	return x1 + x2;
 }
 
-static void init_mwc32_awc64(struct state_mwc32_awc64 *state, uint32_t seed)
+static void init_mwc32_mas64(struct state_mwc32_mas64 *state, uint32_t seed)
 {
 	int i;
 	uint64_t x = seed*Z1 + Z7;
@@ -408,7 +409,7 @@ static void init_mwc32_awc64(struct state_mwc32_awc64 *state, uint32_t seed)
 	state->s1 = MASK64(x);
 	state->s2 = x*Z2 + Z3;
 	for (i=0; i<11; i++)
-		next_mwc32_awc64(state);
+		next_mwc32_mas64(state);
 }
 
 /* MWC32 L3 with rotation
@@ -565,17 +566,18 @@ static void init_xoroshiro(struct state_xoroshiro *state, uint32_t seed)
 		next_xoroshiro(state);
 }
 
-/* MWC32 X2 AWC64
+/* MWC32 X2 MAS64
+ * MAS - Modular Addition Sequence
  */
-struct state_mwc32_x2_awc64 {
+struct state_mwc32_x2_mas64 {
 	uint64_t s1;
 	uint64_t s2;
 	uint64_t s3;
 };
 
-static inline uint64_t next_mwc32_x2_awc64(void *s)
+static inline uint64_t next_mwc32_x2_mas64(void *s)
 {
-	struct state_mwc32_x2_awc64 *state = s;
+	struct state_mwc32_x2_mas64 *state = s;
 	uint64_t x1 = L32(state->s1)*A1A+H32(state->s1);
 	uint64_t x2 = L32(state->s2)*A1B+H32(state->s2);
 	uint64_t x3 = state->s3 + Z6;
@@ -585,7 +587,7 @@ static inline uint64_t next_mwc32_x2_awc64(void *s)
 	return x1 + FLIP32(x2) + x3;
 }
 
-static void init_mwc32_x2_awc64(struct state_mwc32_x2_awc64 *state, uint32_t seed)
+static void init_mwc32_x2_mas64(struct state_mwc32_x2_mas64 *state, uint32_t seed)
 {
 	int i;
 	uint64_t x = seed*Z1 + Z7;
@@ -596,7 +598,7 @@ static void init_mwc32_x2_awc64(struct state_mwc32_x2_awc64 *state, uint32_t see
 	state->s2 = MASK64(x);
 	state->s3 = x*Z4 + Z5;
 	for (i=0; i<11; i++)
-		next_mwc32_x2_awc64(state);
+		next_mwc32_x2_mas64(state);
 }
 
 /* MWC32 L2 X2 with multiplication */
@@ -992,12 +994,12 @@ int main (void)
 	TEST_GEN(mwc32_l2_m2, "MWC32 L2 *2", 95);
 	TEST_GEN(mwc32_x2, "MWC32 X2", 126);
 	TEST_GEN(mwc32_x2_m2, "MWC32 X2 *2", 126);
-	TEST_GEN(mwc32_awc64, "MWC32 AWC64", 127);
+	TEST_GEN(mwc32_mas64, "MWC32 MAS64", 127);
 	TEST_GEN(mwc32_l3_r, "MWC32 L3 R", 127);
 	TEST_GEN(mwc32_l3_m2, "MWC32 L3 *2", 127);
 	TEST_GEN(xorshift128p, "XORShift128+", 128);
 	TEST_GEN(xoroshiro, "xoroshiro128plus", 128);
-	TEST_GEN(mwc32_x2_awc64, "MWC32 X2 AWC64", 190);
+	TEST_GEN(mwc32_x2_mas64, "MWC32 X2 MAS64", 190);
 	TEST_GEN(mwc32_l2_x2_m2, "MWC32 L2 X2 *2", 190);
 	TEST_GEN(mwc32_l6_m2, "MWC32 L6 *2", 223);
 	TEST_GEN(mwc32_x4, "MWC32 X4", 252);
