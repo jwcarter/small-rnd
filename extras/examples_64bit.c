@@ -622,7 +622,7 @@ static inline uint64_t next_mwc32_l2_x2_m2(void *s)
 	state->s2a = state->s2b;
 	state->s2b = x2;
 	state->c2 = H32(x2);
-	uint64_t z1 = Z1 * H32(x1);
+	uint64_t z1 = Z1 * L32(x1);
 	uint64_t z2 = Z2 * L32(x2);
 	return z1 + FLIP32(z2);
 }
@@ -760,7 +760,7 @@ static inline uint64_t next_mwc32_l3_x2_m2(void *s)
 	state->s2b = state->s2c;
 	state->s2c = x2;
 	state->c2 = H32(x2);
-	uint64_t z1 = Z1 * H32(x1);
+	uint64_t z1 = Z1 * L32(x1);
 	uint64_t z2 = Z2 * L32(x2);
 	return z1 + FLIP32(z2);
 }
