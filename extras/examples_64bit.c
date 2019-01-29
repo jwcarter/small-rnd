@@ -282,6 +282,39 @@ static void init_mwc32_l2_u2(struct state_mwc32_l2_u2 *state, uint32_t seed)
 		next_mwc32_l2_u2(state);
 }
 
+/* MWC32 L2 with rotation */
+struct state_mwc32_l2_r {
+	uint32_t s1;
+	uint32_t s2;
+	uint32_t c;
+};
+
+static inline uint64_t next_mwc32_l2_r(void *s)
+{
+	struct state_mwc32_l2_r *state = s;
+	uint64_t x = state->s1*A2A+state->c;
+	state->s1 = state->s2;
+	state->s2 = x;
+	state->c = H32(x);
+	return x + RR64(x,25);
+}
+
+static void init_mwc32_l2_r(struct state_mwc32_l2_r *state, uint32_t seed)
+{
+	int i;
+	uint32_t x = seed*Z1 + Z7;
+	x = (L30(x) != 0) ? x : Z8;
+	state->c = L30(x);
+	x = x*Z2 + Z3;
+	x = (L31(x) != 0) ? x : Z9;
+	state->s1 = L31(x);
+	x = x*Z4 + Z5;
+	x = (L31(x) != 0) ? x : (Z7 + Z1);
+	state->s2 = L31(x);
+	for (i=0; i<11; i++)
+		next_mwc32_l2_r(state);
+}
+
 /* MWC32 L2 with multiplication */
 struct state_mwc32_l2_m2 {
 	uint32_t s1;
@@ -1140,6 +1173,7 @@ int main (void)
 	TEST_GEN(smix64, "SMIX64", 64);
 	TEST_GEN(xorshift64, "XORShift64", 64);
 	TEST_GEN(mwc32_l2_u2, "MWC32 L2 U2", 94);
+	TEST_GEN(mwc32_l2_m2, "MWC32 L2 R", 95);
 	TEST_GEN(mwc32_l2_m2, "MWC32 L2 *2", 95);
 	TEST_GEN(mwc32_x2, "MWC32 X2", 126);
 	TEST_GEN(mwc32_x2_m2, "MWC32 X2 *2", 126);
