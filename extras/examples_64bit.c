@@ -771,6 +771,51 @@ static void init_mwc32_l2_x2_m2(struct state_mwc32_l2_x2_m2 *state, uint32_t see
 		next_mwc32_l2_x2_m2(state);
 }
 
+/* MWC32 L3 MAS64
+ * Passes all of the tests of BigCrush.
+ * Three 32-bit ranges tested: 64-33, 48-17, and 32-1 (16-49 not tested)
+ */
+struct state_mwc32_l3_mas64 {
+	uint32_t s1a;
+	uint32_t s1b;
+	uint32_t s1c;
+	uint32_t c;
+	uint64_t s2;
+};
+
+static inline uint64_t next_mwc32_l3_mas64(void *s)
+{
+	struct state_mwc32_l3_mas64 *state = s;
+	uint64_t x1 = state->s1a*A3A+state->c;
+	uint64_t x2 = state->s2 + Z9;
+	state->s1a = state->s1b;
+	state->s1b = state->s1c;
+	state->s1c = x1;
+	state->c = H32(x1);
+	state->s2 = x2;
+	return x1 + x2;
+}
+
+static void init_mwc32_l3_mas64(struct state_mwc32_l3_mas64 *state, uint32_t seed)
+{
+	int i;
+	uint64_t x = seed*Z1 + Z2;
+	state->s2 = x;
+	x = (L30(x) != 0) ? x : Z7;
+	state->c = L30(x);
+	x = x*Z2 + Z3;
+	x = (L31(x) != 0) ? x : Z8;
+	state->s1a = L31(x);
+	x = x*Z3 + Z4;
+	x = (L31(x) != 0) ? x : Z9;
+	state->s1b = L31(x);
+	x = x*Z4 + Z5;
+	x = (L31(x) != 0) ? x : (Z7 + Z1);
+	state->s1c = L31(x);
+	for (i=0; i<11; i++)
+		next_mwc32_l3_mas64(state);
+}
+
 /* MWC32 L6 M2 */
 struct state_mwc32_l6_m2 {
 	uint8_t n;
@@ -1223,6 +1268,7 @@ int main (void)
 	TEST_GEN(mwc32_x2_mas64, "MWC32 X2 MAS64", 190);
 	TEST_GEN(mwc32_l2_x2, "MWC32 L2 X2", 190);
 	TEST_GEN(mwc32_l2_x2_m2, "MWC32 L2 X2 *2", 190);
+	TEST_GEN(mwc32_l3_mas64, "MWC32 L3 MAS64", 191);
 	TEST_GEN(mwc32_l6_m2, "MWC32 L6 *2", 223);
 	TEST_GEN(mwc32_x4, "MWC32 X4", 252);
 	TEST_GEN(mwc32_l3_x2, "MWC32 L3 X2", 254);
