@@ -601,6 +601,57 @@ static void init_mwc32_x2_mas64(struct state_mwc32_x2_mas64 *state, uint32_t see
 		next_mwc32_x2_mas64(state);
 }
 
+/* MWC32 L2 X2 */
+struct state_mwc32_l2_x2 {
+	uint32_t s1a;
+	uint32_t s1b;
+	uint32_t c1;
+	uint32_t s2a;
+	uint32_t s2b;
+	uint32_t c2;
+};
+
+static inline uint64_t next_mwc32_l2_x2(void *s)
+{
+	struct state_mwc32_l2_x2 *state = s;
+	uint64_t x1 = state->s1a*A2A+state->c1;
+	state->s1a = state->s1b;
+	state->s1b = x1;
+	state->c1 = H32(x1);
+	uint64_t x2 = state->s2a*A2B+state->c2;
+	state->s2a = state->s2b;
+	state->s2b = x2;
+	state->c2 = H32(x2);
+	uint64_t z1 = Z1 * L32(x1);
+	uint64_t z2 = Z2 * L32(x2);
+	return z1 + FLIP32(z2);
+}
+
+static void init_mwc32_l2_x2(struct state_mwc32_l2_x2 *state, uint32_t seed)
+{
+	int i;
+	uint32_t x = seed*Z1 + Z2;
+	x = (L30(x) != 0) ? x : Z7;
+	state->c1 = L30(x);
+	x = x*Z2 + Z3;
+	x = (L30(x) != 0) ? x : Z8;
+	state->c2 = L30(x);
+	x = x*Z3 + Z4;
+	x = (L31(x) != 0) ? x : Z9;
+	state->s1a = L31(x);
+	x = x*Z4 + Z5;
+	x = (L31(x) != 0) ? x : (Z7 + Z1);
+	state->s1b = L31(x);
+	x = x*Z5 + Z6;
+	x = (L31(x) != 0) ? x : (Z8 + Z2);
+	state->s2a = L31(x);
+	x = x*Z6 + Z1;
+	x = (L31(x) != 0) ? x : (Z9 + Z3);
+	state->s2b = L31(x);
+	for (i=0; i<11; i++)
+		next_mwc32_l2_x2(state);
+}
+
 /* MWC32 L2 X2 with multiplication */
 struct state_mwc32_l2_x2_m2 {
 	uint32_t s1a;
@@ -1041,6 +1092,7 @@ int main (void)
 	TEST_GEN(xorshift128p, "XORShift128+", 128);
 	TEST_GEN(xoroshiro, "xoroshiro128plus", 128);
 	TEST_GEN(mwc32_x2_mas64, "MWC32 X2 MAS64", 190);
+	TEST_GEN(mwc32_l2_x2, "MWC32 L2 X2", 190);
 	TEST_GEN(mwc32_l2_x2_m2, "MWC32 L2 X2 *2", 190);
 	TEST_GEN(mwc32_l6_m2, "MWC32 L6 *2", 223);
 	TEST_GEN(mwc32_x4, "MWC32 X4", 252);
