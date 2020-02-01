@@ -25,7 +25,8 @@
  * Author: James Carter
  *
  * Full 64-bit output from two 32-bit Multiply-With-Carry (MWC)
- * generators are added together
+ * generators are added together after rotating the second output by
+ * 32-bits.
  *
  * Tested with the TestU01 library from
  * http://www.iro.umontreal.ca/~simardr/testu01/tu01.html
@@ -50,6 +51,7 @@ struct rnd {
 
 #define H32(x) ((x)>>32)
 #define L32(x) ((x)&0xFFFFFFFFUL)
+#define FLIP32(x) ((x)>>32 | (x)<<32)
 #define A1 4294095429ULL /* MWC L1: 3 * 13 * 110105011 */
 #define A2 4293977883ULL /* MWC L1: 3 * 13 * 110101997 */
 								   
@@ -59,10 +61,7 @@ static inline uint64_t next_rnd(struct rnd *rnd)
 	uint64_t x2 = L32(rnd->s2)*A2+H32(rnd->s2);
 	rnd->s1 = x1;
 	rnd->s2 = x2;
-	uint64_t y = x1 + FLIP32(x2);
-	uint64_t z1 = Z1 * H32(y);
-	uint64_t z2 = Z2 * L32(y);
-	return z1 + FLIP32(z2);
+	return x1 + FLIP32(x2);
 }
 
 #define Z1 4078645709ULL /* LCG: 77999 * 52291 */
