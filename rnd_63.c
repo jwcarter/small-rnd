@@ -20,7 +20,7 @@
 #include <stdio.h>
 #include <stdint.h>
 
-/* rnd63 - Pseudorandom number generator with period ~2^63
+/* rnd_63 - Pseudorandom number generator with period ~2^63
  *
  * Author: James Carter
  *
@@ -31,8 +31,14 @@
  *
  * Tested with the TestU01 library from
  * http://www.iro.umontreal.ca/~simardr/testu01/tu01.html
- * Passes all of the tests of BigCrush.
- * Four 32-bit ranges tested: 64-33, 48-17, 32-1, and 16-49
+ * Passes all of the tests of BigCrush for the following 32-bit ranges:
+ *   03-36, 07-40, 11-44, 15-48, 19-52, 23-56, 31-00, 35-04, 39-08, 47-16,
+ *   51-20, 59-28, 63-32
+ * The following ranges fail the listed tests:
+ *   27-60: 14  BirthdaySpacings, t = 3
+ *   43-12: 13  BirthdaySpacings, t = 2
+ *          15  BirthdaySpacings, t = 4
+ *   55-24: 13  BirthdaySpacings, t = 2
  *
  * Criteria for MWCs:
  * For a MWC with base B and lag L, chose multiplier A such that
