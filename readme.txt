@@ -42,10 +42,11 @@ The rand_126.c generator uses two MWC32 generators with no lag. The new
 and then added to the new 64 bits of state of the other generator to make
 the new random number. This generator has a period of ~2^126.
 
-The rand_127.c generator uses a MWC32 generator with no lag and a AWC
-(Add with Carry) generator with no lag. The new state of the MWC32
-generator is added with the new state of the AWC generator to make the
-new random number. This generator has a period of ~2^127.
+The rand_127.c generator uses a MWC32 generator with lag three. The full
+64-bit output is mixed by multiplying the upper and lower 32-bits with
+32-bit numbers, rotating the second product by 32-bits and adding it to
+the first product to make the new random number. This generator has a
+period of ~2^127.
 
 The rand_255.c generator uses a MWC32 generator with lag seven. The new
 state X2 and C2 (where X2 is the lower 32-bits and C2 is the upper of a
@@ -69,8 +70,6 @@ bits 1-32, 17-48, 33-64, and 49-16. This is not sufficient to fully test
 a generator producing 64-bits, but it will hopefully find any major flaws.
 The rand_63.c generator, since its period is < 2^64, does not produce
 every number from 0 to 2^64-1 and a good 64-bit test would catch that.
-
-All four generators pass all of the tests in BigCrush.
 
 ======================================================================
 BUILDING
