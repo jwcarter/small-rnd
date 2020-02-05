@@ -37,6 +37,12 @@ has its upper and lower 32 bits swapped and then is added to the product of
 C2 and K2 to make the new random number. This generator has a period of
 ~2^63.
 
+The rand_95.c generator uses a MWC32 generator with lag two. The full
+64-bit output is mixed by multiplying the upper and lower 32-bits with
+32-bit numbers, rotating the second product by 32-bits and adding it to
+the first product to make the new random number. This generator has a
+period of ~2^95.
+
 The rand_126.c generator uses two MWC32 generators with no lag. The new
 64 bits of state of one generator has its upper and lower 32 bits swapped
 and then added to the new 64 bits of state of the other generator to make
@@ -80,6 +86,9 @@ which generator you want to use.
 
 To use rnd_63.c:
 gcc -lm -o rnd_test rnd.c rnd_63.c rnd_test.c
+
+To use rnd_95.c:
+gcc -lm -o rnd_test rnd.c rnd_95.c rnd_test.c
 
 To use rnd_126.c:
 gcc -lm -o rnd_test rnd.c rnd_126.c rnd_test.c
