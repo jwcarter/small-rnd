@@ -61,6 +61,12 @@ and K1 has its upper and lower 32bits swapped and then is added to the
 product of C2 and K2 to make the new random number. This generator has a
 period of ~2^255.
 
+The rand_287.c generator uses a MWC32 generator with lag eight. The full
+64-bit output is mixed by multiplying the upper and lower 32-bits with
+32-bit numbers, rotating the second product by 32-bits and adding it to
+the first product to make the new random number. This generator has a
+period of ~2^287.
+
 ======================================================================
 BigCrush Test Results
 ======================================================================
@@ -98,6 +104,9 @@ gcc -lm -o rnd_test rnd.c rnd_127.c rnd_test.c
 
 To use rnd_255.c:
 gcc -lm -o rnd_test rnd.c rnd_255.c rnd_test.c
+
+To use rnd_287.c:
+gcc -lm -o rnd_test rnd.c rnd_287.c rnd_test.c
 
 ======================================================================
 EXAMPLE GENERATORS
