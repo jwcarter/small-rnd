@@ -30,31 +30,36 @@ an LCG, it seems like the lower bits should be preferred. If this bias
 exists then either the tests of BigCrush do not test for it or the bias 
 is very small for lag 2 and lag 3 generators.
 
-The rand_63.c generator uses a MWC32 generator with no lag. The new state
+The rnd_63.c generator uses a MWC32 generator with no lag. The new state
 X2 and C2 (where X2 is the lower 32-bits and C2 is the upper of a 64-bit
 number) are multipled with constants K1 and K2. The product of X2 and K1
 has its upper and lower 32 bits swapped and then is added to the product of
 C2 and K2 to make the new random number. This generator has a period of
 ~2^63.
 
-The rand_95.c generator uses a MWC32 generator with lag two. The full
+The rnd_95.c generator uses a MWC32 generator with lag two. The full
 64-bit output is mixed by multiplying the upper and lower 32-bits with
 32-bit numbers, rotating the second product by 32-bits and adding it to
 the first product to make the new random number. This generator has a
 period of ~2^95.
 
-The rand_126.c generator uses two MWC32 generators with no lag. The new
+The rnd_126.c generator uses two MWC32 generators with no lag. The new
 64 bits of state of one generator has its upper and lower 32 bits swapped
 and then added to the new 64 bits of state of the other generator to make
 the new random number. This generator has a period of ~2^126.
 
-The rand_127.c generator uses a MWC32 generator with lag three. The full
+The rnd_127.c generator uses a MWC32 generator with lag three. The full
 64-bit output is mixed by multiplying the upper and lower 32-bits with
 32-bit numbers, rotating the second product by 32-bits and adding it to
 the first product to make the new random number. This generator has a
 period of ~2^127.
 
-The rand_255.c generator uses a MWC32 generator with lag seven. The new
+The rnd_190.c generator uses two MWC32 lag two generators. The 64-bit
+output of the second generator is rotated by 32-bits and added to the
+64-bit output of first generator to make the new random number.
+This generator has a period of ~2^190.
+
+The rnd_255.c generator uses a MWC32 generator with lag seven. The new
 state X2 and C2 (where X2 is the lower 32-bits and C2 is the upper of a
 64-bit number) are multipled with constants K1 and K2. The product of X2
 and K1 has its upper and lower 32bits swapped and then is added to the
@@ -101,6 +106,9 @@ gcc -lm -o rnd_test rnd.c rnd_126.c rnd_test.c
 
 To use rnd_127.c:
 gcc -lm -o rnd_test rnd.c rnd_127.c rnd_test.c
+
+To use rnd_190.c:
+gcc -lm -o rnd_test rnd.c rnd_190.c rnd_test.c
 
 To use rnd_255.c:
 gcc -lm -o rnd_test rnd.c rnd_255.c rnd_test.c
