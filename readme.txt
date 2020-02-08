@@ -59,6 +59,11 @@ output of the second generator is rotated by 32-bits and added to the
 64-bit output of first generator to make the new random number.
 This generator has a period of ~2^190.
 
+The rnd_254.c generator uses two MWC32 lag three generators. The 64-bit
+output of the second generator is rotated by 32-bits and added to the
+64-bit output of first generator to make the new random number.
+This generator has a period of ~2^254.
+
 The rnd_255.c generator uses a MWC32 generator with lag seven. The new
 state X2 and C2 (where X2 is the lower 32-bits and C2 is the upper of a
 64-bit number) are multipled with constants K1 and K2. The product of X2
@@ -109,6 +114,9 @@ gcc -lm -o rnd_test rnd.c rnd_127.c rnd_test.c
 
 To use rnd_190.c:
 gcc -lm -o rnd_test rnd.c rnd_190.c rnd_test.c
+
+To use rnd_254.c:
+gcc -lm -o rnd_test rnd.c rnd_254.c rnd_test.c
 
 To use rnd_255.c:
 gcc -lm -o rnd_test rnd.c rnd_255.c rnd_test.c
