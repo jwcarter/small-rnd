@@ -82,6 +82,21 @@
 #define RL64(x,r) ((x)<<(r) | (x)>>(64-(r)))
 #define MASK64(x) ((x)&0x3FFFFFFF7FFFFFFFULL)
 
+
+static void gen_init_state(uint32_t s[], unsigned num, uint32_t seed)
+{
+	int i = 0;
+	uint32_t x = Z4;
+	while (i < num) {
+		x = ((x + seed) * Z3) + Z4;
+		if (L31(x) != 0) {
+			s[i] = x;
+			i++;
+		}
+	}
+}
+
+
 /* MWC32 with rotation
  * Regularly, but not always, fails BigCrush #15 BirthdaySpacings, t = 4
  * for the 32-bit range 48-17
@@ -103,10 +118,10 @@ static inline uint64_t next_mwc32_r(void *s)
 static void init_mwc32_r(struct state_mwc32_r *state, uint32_t seed)
 {
 	int i;
-	uint64_t x = seed*Z1 + Z7;
-	x = (MASK64(x) != 0) ? x : Z8;
-	state->s1 = MASK64(x);
-	for (i=0; i<11; i++)
+	uint32_t z[3];
+	gen_init_state(z, 3, seed);
+	state->s1 = (uint64_t)L31(z[2]) << 32 | (uint64_t)L31(z[1]);
+	for (i=0; i<13; i++)
 		next_mwc32_r(state);
 }
 				
@@ -131,11 +146,11 @@ static void init_mwc32_m2_32(struct state_mwc32_m2_32 *state,
 				uint32_t seed)
 {
 	int i;
-	uint64_t x = seed*Z1 + Z7;
-	x = (MASK64(x) != 0) ? x : Z8;
-	state->s1 = L31(x);
-	state->c  = L30(H32(x));
-	for (i=0; i<11; i++)
+	uint32_t z[3];
+	gen_init_state(z, 3, seed);
+	state->s1 = L31(z[2]);
+	state->c  = L31(z[1]);
+	for (i=0; i<13; i++)
 		next_mwc32_m2_32(state);
 }
 
@@ -161,10 +176,10 @@ static void init_mwc32_m2_64(struct state_mwc32_m2_64 *state,
 				uint32_t seed)
 {
 	int i;
-	uint64_t x = seed*Z1 + Z7;
-	x = (MASK64(x) != 0) ? x : Z8;
-	state->s1 = MASK64(x);
-	for (i=0; i<11; i++)
+	uint32_t z[3];
+	gen_init_state(z, 3, seed);
+	state->s1 = (uint64_t)L31(z[2]) << 32 | (uint64_t)L31(z[1]);
+	for (i=0; i<13; i++)
 		next_mwc32_m2_64(state);
 }
 
@@ -183,10 +198,10 @@ static inline uint64_t next_lcg64(void *s)
 static void init_lcg64(struct state_lcg64 *state, uint32_t seed)
 {
 	int i;
-	uint64_t x = seed*Z1 + Z7;
-	x = (x != 0) ? x : Z8;
-	state->s = x;
-	for (i=0; i<11; i++)
+	uint32_t z[3];
+	gen_init_state(z, 3, seed);
+	state->s = (uint64_t)z[2] << 32 | (uint64_t)z[1];
+	for (i=0; i<13; i++)
 		next_lcg64(state);
 }
 
@@ -213,10 +228,10 @@ static inline uint64_t next_smix64(void *s) {
 static void init_smix64(struct state_smix64 *state, uint32_t seed)
 {
 	int i;
-	uint64_t x = seed*Z1 + Z7;
-	x = (x != 0) ? x : Z8;
-	state->s = x;
-	for (i=0; i<11; i++)
+	uint32_t z[3];
+	gen_init_state(z, 3, seed);
+	state->s = (uint64_t)z[2] << 32 | (uint64_t)z[1];
+	for (i=0; i<13; i++)
 		next_smix64(state);
 }
 
@@ -239,10 +254,10 @@ static inline uint64_t next_xorshift64(void *s)
 static void init_xorshift64(struct state_xorshift64 *state, uint32_t seed)
 {
 	int i;
-	uint64_t x = seed*Z1 + Z7;
-	x = (x != 0) ? x : Z8;
-	state->s1 = x;
-	for (i=0; i<11; i++)
+	uint32_t z[3];
+	gen_init_state(z, 3, seed);
+	state->s1 = (uint64_t)z[2] << 32 | (uint64_t)z[1];
+	for (i=0; i<13; i++)
 		next_xorshift64(state);
 }
 
@@ -269,16 +284,12 @@ static inline uint64_t next_mwc32_l2_u2(void *s)
 static void init_mwc32_l2_u2(struct state_mwc32_l2_u2 *state, uint32_t seed)
 {
 	int i;
-	uint32_t x = seed*Z1 + Z7;
-	x = (L30(x) != 0) ? x : Z8;
-	state->c = L30(x);
-	x = x*Z2 + Z3;
-	x = (L31(x) != 0) ? x : Z9;
-	state->s1 = L31(x);
-	x = x*Z4 + Z5;
-	x = (L31(x) != 0) ? x : (Z7 + Z1);
-	state->s2 = L31(x);
-	for (i=0; i<11; i++)
+	uint32_t z[4];
+	gen_init_state(z, 4, seed);
+	state->s1 = L31(z[3]);
+	state->s2 = L31(z[2]);
+	state->c  = L31(z[1]);
+	for (i=0; i<13; i++)
 		next_mwc32_l2_u2(state);
 }
 
@@ -302,15 +313,11 @@ static inline uint64_t next_mwc32_l2_r(void *s)
 static void init_mwc32_l2_r(struct state_mwc32_l2_r *state, uint32_t seed)
 {
 	int i;
-	uint32_t x = seed*Z1 + Z7;
-	x = (L30(x) != 0) ? x : Z8;
-	state->c = L30(x);
-	x = x*Z2 + Z3;
-	x = (L31(x) != 0) ? x : Z9;
-	state->s1 = L31(x);
-	x = x*Z4 + Z5;
-	x = (L31(x) != 0) ? x : (Z7 + Z1);
-	state->s2 = L31(x);
+	uint32_t z[4];
+	gen_init_state(z, 4, seed);
+	state->s1 = L31(z[3]);
+	state->s2 = L31(z[2]);
+	state->c  = L31(z[1]);
 	for (i=0; i<11; i++)
 		next_mwc32_l2_r(state);
 }
@@ -337,16 +344,12 @@ static inline uint64_t next_mwc32_l2_m2(void *s)
 static void init_mwc32_l2_m2(struct state_mwc32_l2_m2 *state, uint32_t seed)
 {
 	int i;
-	uint32_t x = seed*Z1 + Z7;
-	x = (L30(x) != 0) ? x : Z8;
-	state->c = L30(x);
-	x = x*Z2 + Z3;
-	x = (L31(x) != 0) ? x : Z9;
-	state->s1 = L31(x);
-	x = x*Z4 + Z5;
-	x = (L31(x) != 0) ? x : (Z7 + Z1);
-	state->s2 = L31(x);
-	for (i=0; i<11; i++)
+	uint32_t z[4];
+	gen_init_state(z, 4, seed);
+	state->s1 = L31(z[3]);
+	state->s2 = L31(z[2]);
+	state->c  = L31(z[1]);
+	for (i=0; i<13; i++)
 		next_mwc32_l2_m2(state);
 }
 
@@ -369,13 +372,11 @@ static inline uint64_t next_mwc32_x2(void *s)
 static void init_mwc32_x2(struct state_mwc32_x2 *state, uint32_t seed)
 {
 	int i;
-	uint64_t x = seed*Z1 + Z7;
-	x = (MASK64(x) != 0) ? x : Z8;
-	state->s1 = MASK64(x);
-	x = x*Z2 + Z3;
-	x = (MASK64(x) != 0) ? x : Z9;
-	state->s2 = MASK64(x);
-	for (i=0; i<11; i++)
+	uint32_t z[5];
+	gen_init_state(z, 5, seed);
+	state->s1 = (uint64_t)L31(z[3]) << 32 | (uint64_t)L31(z[1]);
+	state->s2 = (uint64_t)L31(z[4]) << 32 | (uint64_t)L31(z[2]);
+	for (i=0; i<13; i++)
 		next_mwc32_x2(state);
 }
 
@@ -404,13 +405,11 @@ static inline uint64_t next_mwc32_x2_m2(void *s)
 static void init_mwc32_x2_m2(struct state_mwc32_x2_m2 *state, uint32_t seed)
 {
 	int i;
-	uint64_t x = seed*Z1 + Z7;
-	x = (MASK64(x) != 0) ? x : Z8;
-	state->s1 = MASK64(x);
-	x = x*Z2 + Z3;
-	x = (MASK64(x) != 0) ? x : Z9;
-	state->s2 = MASK64(x);
-	for (i=0; i<11; i++)
+	uint32_t z[5];
+	gen_init_state(z, 5, seed);
+	state->s1 = (uint64_t)L31(z[3]) << 32 | (uint64_t)L31(z[1]);
+	state->s2 = (uint64_t)L31(z[4]) << 32 | (uint64_t)L31(z[2]);
+	for (i=0; i<13; i++)
 		next_mwc32_x2_m2(state);
 }
 
@@ -437,11 +436,11 @@ static inline uint64_t next_mwc32_mas64(void *s)
 static void init_mwc32_mas64(struct state_mwc32_mas64 *state, uint32_t seed)
 {
 	int i;
-	uint64_t x = seed*Z1 + Z7;
-	x = (MASK64(x) != 0) ? x : Z8;
-	state->s1 = MASK64(x);
-	state->s2 = x*Z2 + Z3;
-	for (i=0; i<11; i++)
+	uint32_t z[5];
+	gen_init_state(z, 5, seed);
+	state->s1 = (uint64_t)L31(z[3]) << 32 | (uint64_t)L31(z[1]);
+	state->s2 = (uint64_t)z[4] << 32 | (uint64_t)z[2];
+	for (i=0; i<13; i++)
 		next_mwc32_mas64(state);
 }
 
@@ -470,19 +469,13 @@ static inline uint64_t next_mwc32_l3_r(void *s)
 static void init_mwc32_l3_r(struct state_mwc32_l3_r *state, uint32_t seed)
 {
 	int i;
-	uint32_t x = seed*Z1 + Z2;
-	x = (L30(x) != 0) ? x : Z7;
-	state->c = L30(x);
-	x = x*Z2 + Z3;
-	x = (L31(x) != 0) ? x : Z8;
-	state->s1 = L31(x);
-	x = x*Z3 + Z4;
-	x = (L31(x) != 0) ? x : Z9;
-	state->s2 = L31(x);
-	x = x*Z4 + Z5;
-	x = (L31(x) != 0) ? x : (Z7 + Z1);
-	state->s3 = L31(x);
-	for (i=0; i<11; i++)
+	uint32_t z[5];
+	gen_init_state(z, 5, seed);
+	state->s1 = L31(z[4]);
+	state->s2 = L31(z[3]);
+	state->s3 = L31(z[2]);
+	state->c  = L31(z[1]);
+	for (i=0; i<13; i++)
 		next_mwc32_l3_r(state);
 }
 
@@ -510,19 +503,13 @@ static inline uint64_t next_mwc32_l3_m2(void *s)
 static void init_mwc32_l3_m2(struct state_mwc32_l3_m2 *state, uint32_t seed)
 {
 	int i;
-	uint32_t x = seed*Z1 + Z2;
-	x = (L30(x) != 0) ? x : Z7;
-	state->c = L30(x);
-	x = x*Z2 + Z3;
-	x = (L31(x) != 0) ? x : Z8;
-	state->s1 = L31(x);
-	x = x*Z3 + Z4;
-	x = (L31(x) != 0) ? x : Z9;
-	state->s2 = L31(x);
-	x = x*Z4 + Z5;
-	x = (L31(x) != 0) ? x : (Z7 + Z1);
-	state->s3 = L31(x);
-	for (i=0; i<11; i++)
+	uint32_t z[5];
+	gen_init_state(z, 5, seed);
+	state->s1 = L31(z[4]);
+	state->s2 = L31(z[3]);
+	state->s3 = L31(z[2]);
+	state->c  = L31(z[1]);
+	for (i=0; i<13; i++)
 		next_mwc32_l3_m2(state);
 }
 
@@ -555,13 +542,11 @@ static inline uint64_t next_xorshift128p(void *s)
 static void init_xorshift128p(struct state_xorshift128p *state, uint32_t seed)
 {
 	int i;
-	uint64_t x = seed*Z1 + Z7;
-	x = (x != 0) ? x : Z8;
-	state->s1 = x;
-	x = x*Z2 + Z3;
-	x = (x != 0) ? x : Z9;
-	state->s2 = x;
-	for (i=0; i<11; i++)
+	uint32_t z[5];
+	gen_init_state(z, 5, seed);
+	state->s1 = (uint64_t)z[3] << 32 | (uint64_t)z[1];
+	state->s2 = (uint64_t)z[4] << 32 | (uint64_t)z[2];
+	for (i=0; i<13; i++)
 		next_xorshift128p(state);
 }
 
@@ -589,13 +574,11 @@ static inline uint64_t next_xoroshiro(void *s)
 static void init_xoroshiro(struct state_xoroshiro *state, uint32_t seed)
 {
 	int i;
-	uint64_t x = seed*Z1 + Z7;
-	x = (x != 0) ? x : Z8;
-	state->s1 = x;
-	x = x*Z2 + Z3;
-	x = (x != 0) ? x : Z9;
-	state->s2 = x;
-	for (i=0; i<11; i++)
+	uint32_t z[5];
+	gen_init_state(z, 5, seed);
+	state->s1 = (uint64_t)z[3] << 32 | (uint64_t)z[1];
+	state->s2 = (uint64_t)z[4] << 32 | (uint64_t)z[2];
+	for (i=0; i<13; i++)
 		next_xoroshiro(state);
 }
 
@@ -619,20 +602,17 @@ static inline uint64_t next_mwc32_l2_mas64(void *s)
 	return x1 + x2;
 }
 
-static void init_mwc32_l2_mas64(struct state_mwc32_l2_mas64 *state, uint32_t seed)
+static void init_mwc32_l2_mas64(struct state_mwc32_l2_mas64 *state,
+								uint32_t seed)
 {
 	int i;
-	uint64_t x = seed*Z1 + Z7;
-	state->s2 = x;
-	x = (L30(x) != 0) ? x : Z8;
-	state->c = L30(x);
-	x = x*Z2 + Z3;
-	x = (L31(x) != 0) ? x : Z9;
-	state->s1a = L31(x);
-	x = x*Z4 + Z5;
-	x = (L31(x) != 0) ? x : (Z7 + Z1);
-	state->s1b = L31(x);
-	for (i=0; i<11; i++)
+	uint32_t z[6];
+	gen_init_state(z, 6, seed);
+	state->s1a = L31(z[5]);
+	state->s1b = L31(z[4]);
+	state->c   = L31(z[3]);
+	state->s2  = (uint64_t)z[2] << 32 | (uint64_t)z[1];
+	for (i=0; i<13; i++)
 		next_mwc32_l2_mas64(state);
 }
 
@@ -657,17 +637,16 @@ static inline uint64_t next_mwc32_x2_mas64(void *s)
 	return x1 + FLIP32(x2) + x3;
 }
 
-static void init_mwc32_x2_mas64(struct state_mwc32_x2_mas64 *state, uint32_t seed)
+static void init_mwc32_x2_mas64(struct state_mwc32_x2_mas64 *state,
+								uint32_t seed)
 {
 	int i;
-	uint64_t x = seed*Z1 + Z7;
-	x = (MASK64(x) != 0) ? x : Z8;
-	state->s1 = MASK64(x);
-	x = x*Z2 + Z3;
-	x = (MASK64(x) != 0) ? x : Z9;
-	state->s2 = MASK64(x);
-	state->s3 = x*Z4 + Z5;
-	for (i=0; i<11; i++)
+	uint32_t z[7];
+	gen_init_state(z, 7, seed);
+	state->s1 = (uint64_t)L31(z[4]) << 32 | (uint64_t)L31(z[1]);
+	state->s2 = (uint64_t)L31(z[5]) << 32 | (uint64_t)L31(z[2]);
+	state->s3 = (uint64_t)z[6] << 32 | (uint64_t)z[3];
+	for (i=0; i<13; i++)
 		next_mwc32_x2_mas64(state);
 }
 
@@ -698,25 +677,15 @@ static inline uint64_t next_mwc32_l2_x2(void *s)
 static void init_mwc32_l2_x2(struct state_mwc32_l2_x2 *state, uint32_t seed)
 {
 	int i;
-	uint32_t x = seed*Z1 + Z2;
-	x = (L30(x) != 0) ? x : Z7;
-	state->c1 = L30(x);
-	x = x*Z2 + Z3;
-	x = (L30(x) != 0) ? x : Z8;
-	state->c2 = L30(x);
-	x = x*Z3 + Z4;
-	x = (L31(x) != 0) ? x : Z9;
-	state->s1a = L31(x);
-	x = x*Z4 + Z5;
-	x = (L31(x) != 0) ? x : (Z7 + Z1);
-	state->s1b = L31(x);
-	x = x*Z5 + Z6;
-	x = (L31(x) != 0) ? x : (Z8 + Z2);
-	state->s2a = L31(x);
-	x = x*Z6 + Z1;
-	x = (L31(x) != 0) ? x : (Z9 + Z3);
-	state->s2b = L31(x);
-	for (i=0; i<11; i++)
+	uint32_t z[7];
+	gen_init_state(z, 7, seed);
+	state->s1a = L31(z[6]);
+	state->s1b = L31(z[5]);
+	state->c1  = L31(z[4]);
+	state->s2a = L31(z[3]);
+	state->s2b = L31(z[2]);
+	state->c2  = L31(z[1]);
+	for (i=0; i<13; i++)
 		next_mwc32_l2_x2(state);
 }
 
@@ -746,28 +715,19 @@ static inline uint64_t next_mwc32_l2_x2_m2(void *s)
 	return z1 + FLIP32(z2);
 }
 
-static void init_mwc32_l2_x2_m2(struct state_mwc32_l2_x2_m2 *state, uint32_t seed)
+static void init_mwc32_l2_x2_m2(struct state_mwc32_l2_x2_m2 *state,
+								uint32_t seed)
 {
 	int i;
-	uint32_t x = seed*Z1 + Z2;
-	x = (L30(x) != 0) ? x : Z7;
-	state->c1 = L30(x);
-	x = x*Z2 + Z3;
-	x = (L30(x) != 0) ? x : Z8;
-	state->c2 = L30(x);
-	x = x*Z3 + Z4;
-	x = (L31(x) != 0) ? x : Z9;
-	state->s1a = L31(x);
-	x = x*Z4 + Z5;
-	x = (L31(x) != 0) ? x : (Z7 + Z1);
-	state->s1b = L31(x);
-	x = x*Z5 + Z6;
-	x = (L31(x) != 0) ? x : (Z8 + Z2);
-	state->s2a = L31(x);
-	x = x*Z6 + Z1;
-	x = (L31(x) != 0) ? x : (Z9 + Z3);
-	state->s2b = L31(x);
-	for (i=0; i<11; i++)
+	uint32_t z[7];
+	gen_init_state(z, 7, seed);
+	state->s1a = L31(z[6]);
+	state->s1b = L31(z[5]);
+	state->c1  = L31(z[4]);
+	state->s2a = L31(z[3]);
+	state->s2b = L31(z[2]);
+	state->c2  = L31(z[1]);
+	for (i=0; i<13; i++)
 		next_mwc32_l2_x2_m2(state);
 }
 
@@ -799,20 +759,14 @@ static inline uint64_t next_mwc32_l3_mas64(void *s)
 static void init_mwc32_l3_mas64(struct state_mwc32_l3_mas64 *state, uint32_t seed)
 {
 	int i;
-	uint64_t x = seed*Z1 + Z2;
-	state->s2 = x;
-	x = (L30(x) != 0) ? x : Z7;
-	state->c = L30(x);
-	x = x*Z2 + Z3;
-	x = (L31(x) != 0) ? x : Z8;
-	state->s1a = L31(x);
-	x = x*Z3 + Z4;
-	x = (L31(x) != 0) ? x : Z9;
-	state->s1b = L31(x);
-	x = x*Z4 + Z5;
-	x = (L31(x) != 0) ? x : (Z7 + Z1);
-	state->s1c = L31(x);
-	for (i=0; i<11; i++)
+	uint32_t z[7];
+	gen_init_state(z, 7, seed);
+	state->s1a = L31(z[6]);
+	state->s1b = L31(z[5]);
+	state->s1c = L31(z[4]);
+	state->c   = L31(z[3]);
+	state->s2  = (uint64_t)z[2] << 32 | (uint64_t)z[1];
+	for (i=0; i<13; i++)
 		next_mwc32_l3_mas64(state);
 }
 
@@ -840,17 +794,13 @@ static inline uint64_t next_mwc32_l6_m2(void *s)
 static void init_mwc32_l6_m2(struct state_mwc32_l6_m2 *state, uint32_t seed)
 {
 	int i;
-	uint32_t x = seed*Z1 + Z2;
-	state->n = x % 7;
-	x = x*Z3 + Z4;
-	x = (L30(x) != 0) ? x : Z7;
-	state->c = L30(x);
-	for (i=0; i<6; i++) {
-		x = x*Z5 + Z6;
-		x = (L31(x) != 0) ? x : Z8;
-		state->s[i] = L31(x);
-	}
-	for (i=0; i<11; i++)
+	uint32_t z[9];
+	gen_init_state(z, 9, seed);
+	state->n = z[1] % 6;
+	state->c = L31(z[2]);
+	for (i=0; i<6; i++)
+		state->s[i] = L31(z[i+3]);
+	for (i=0; i<13; i++)
 		next_mwc32_l6_m2(state);
 }
 
@@ -882,20 +832,15 @@ static inline uint64_t next_mwc32_x4(void *s)
 
 static void init_mwc32_x4(struct state_mwc32_x4 *state, uint32_t seed)
 {
+
 	int i;
-	uint64_t x = seed*Z1 + Z7;
-	x = (MASK64(x) != 0) ? x : Z8;
-	state->s1 = MASK64(x);
-	x = x*Z2 + Z3;
-	x = (MASK64(x) != 0) ? x : Z9;
-	state->s2 = MASK64(x);
-	x = x*Z4 + Z5;
-	x = (MASK64(x) != 0) ? x : (Z7 + Z1);
-	state->s3 = MASK64(x);
-	x = x*Z6 + Z1;
-	x = (MASK64(x) != 0) ? x : (Z8 + Z2);
-	state->s4 = MASK64(x);
-	for (i=0; i<11; i++)
+	uint32_t z[9];
+	gen_init_state(z, 9, seed);
+	state->s1 = (uint64_t)L31(z[3]) << 32 | (uint64_t)L31(z[1]);
+	state->s2 = (uint64_t)L31(z[4]) << 32 | (uint64_t)L31(z[2]);
+	state->s3 = (uint64_t)L31(z[7]) << 32 | (uint64_t)L31(z[5]);
+	state->s4 = (uint64_t)L31(z[8]) << 32 | (uint64_t)L31(z[6]);
+	for (i=0; i<13; i++)
 		next_mwc32_x4(state);
 }
 
@@ -930,31 +875,17 @@ static inline uint64_t next_mwc32_l3_x2(void *s)
 static void init_mwc32_l3_x2(struct state_mwc32_l3_x2 *state, uint32_t seed)
 {
 	int i;
-	uint32_t x = seed*Z1 + Z2;
-	x = (L30(x) != 0) ? x : Z7;
-	state->c1 = L30(x);
-	x = x*Z2 + Z3;
-	x = (L30(x) != 0) ? x : Z8;
-	state->c2 = L30(x);
-	x = x*Z3 + Z4;
-	x = (L31(x) != 0) ? x : Z9;
-	state->s1a = L31(x);
-	x = x*Z4 + Z5;
-	x = (L31(x) != 0) ? x : (Z7 + Z1);
-	state->s1b = L31(x);
-	x = x*Z5 + Z6;
-	x = (L31(x) != 0) ? x : (Z8 + Z2);
-	state->s1c = L31(x);
-	x = x*Z6 + Z1;
-	x = (L31(x) != 0) ? x : (Z9 + Z3);
-	state->s2a = L31(x);
-	x = x*(Z1 + Z2) + (Z3 + Z4);
-	x = (L31(x) != 0) ? x : (Z7 + Z4);
-	state->s2b = L31(x);
-	x = x*(Z2 + Z3) + (Z4 + Z5);
-	x = (L31(x) != 0) ? x : (Z8 + Z5);
-	state->s2c = L31(x);
-	for (i=0; i<11; i++)
+	uint32_t z[9];
+	gen_init_state(z, 9, seed);
+	state->s1a = L31(z[8]);
+	state->s1b = L31(z[7]);
+	state->s1c = L31(z[6]);
+	state->c1  = L31(z[5]);
+	state->s2a = L31(z[4]);
+	state->s2b = L31(z[3]);
+	state->s2c = L31(z[2]);
+	state->c2  = L31(z[1]);
+	for (i=0; i<13; i++)
 		next_mwc32_l3_x2(state);
 }
 
@@ -988,34 +919,21 @@ static inline uint64_t next_mwc32_l3_x2_m2(void *s)
 	return z1 + FLIP32(z2);
 }
 
-static void init_mwc32_l3_x2_m2(struct state_mwc32_l3_x2_m2 *state, uint32_t seed)
+static void init_mwc32_l3_x2_m2(struct state_mwc32_l3_x2_m2 *state, 
+								int32_t seed)
 {
 	int i;
-	uint32_t x = seed*Z1 + Z2;
-	x = (L30(x) != 0) ? x : Z7;
-	state->c1 = L30(x);
-	x = x*Z2 + Z3;
-	x = (L30(x) != 0) ? x : Z8;
-	state->c2 = L30(x);
-	x = x*Z3 + Z4;
-	x = (L31(x) != 0) ? x : Z9;
-	state->s1a = L31(x);
-	x = x*Z4 + Z5;
-	x = (L31(x) != 0) ? x : (Z7 + Z1);
-	state->s1b = L31(x);
-	x = x*Z5 + Z6;
-	x = (L31(x) != 0) ? x : (Z8 + Z2);
-	state->s1c = L31(x);
-	x = x*Z6 + Z1;
-	x = (L31(x) != 0) ? x : (Z9 + Z3);
-	state->s2a = L31(x);
-	x = x*(Z1 + Z2) + (Z3 + Z4);
-	x = (L31(x) != 0) ? x : (Z7 + Z4);
-	state->s2b = L31(x);
-	x = x*(Z2 + Z3) + (Z4 + Z5);
-	x = (L31(x) != 0) ? x : (Z8 + Z5);
-	state->s2c = L31(x);
-	for (i=0; i<11; i++)
+	uint32_t z[9];
+	gen_init_state(z, 9, seed);
+	state->s1a = L31(z[8]);
+	state->s1b = L31(z[7]);
+	state->s1c = L31(z[6]);
+	state->c1  = L31(z[5]);
+	state->s2a = L31(z[4]);
+	state->s2b = L31(z[3]);
+	state->s2c = L31(z[2]);
+	state->c2  = L31(z[1]);
+	for (i=0; i<13; i++)
 		next_mwc32_l3_x2_m2(state);
 }
 
@@ -1046,17 +964,13 @@ static inline uint64_t next_mwc32_l7_m2(void *s)
 static void init_mwc32_l7_m2(struct state_mwc32_l7_m2 *state, uint32_t seed)
 {
 	int i;
-	uint32_t x = seed*Z1 + Z7;
-	state->n = x % 7;
-	x = x*Z2 + Z3;
-	x = (L30(x) != 0) ? x : Z8;
-	state->c = L30(x);
-	for (i=0; i<7; i++) {
-		x = x*Z4 + Z5;
-		x = (L31(x) != 0) ? x : Z9;
-		state->s[i] = L31(x);
-	}
-	for (i=0; i<11; i++)
+	uint32_t z[10];
+	gen_init_state(z, 10, seed);
+	state->n = z[1] % 7;
+	state->c = L31(z[2]);
+	for (i=0; i<7; i++)
+		state->s[i] = L31(z[i+3]);
+	for (i=0; i<17; i++)
 		next_mwc32_l7_m2(state);
 }
 
@@ -1084,17 +998,13 @@ static inline uint64_t next_mwc32_l8_m2(void *s)
 static void init_mwc32_l8_m2(struct state_mwc32_l8_m2 *state, uint32_t seed)
 {
 	int i;
-	uint32_t x = seed*Z1 + Z7;
-	state->n = 0x7&x;
-	x = x*Z2 + Z3;
-	x = (L30(x) != 0) ? x : Z8;
-	state->c = L30(x);
-	for (i=0; i<8; i++) {
-		x = x*Z4 + Z5;
-		x = (L31(x) != 0) ? x : Z9;
-		state->s[i] = L31(x);
-	}
-	for (i=0; i<11; i++)
+	uint32_t z[11];
+	gen_init_state(z, 11, seed);
+	state->n = z[1] & 0x7;
+	state->c = L31(z[2]);
+	for (i=0; i<8; i++)
+		state->s[i] = L31(z[i+3]);
+	for (i=0; i<17; i++)
 		next_mwc32_l8_m2(state);
 }
 
@@ -1130,22 +1040,14 @@ static inline uint64_t next_mwc60_l4_m2(void *s)
 static void init_mwc60_l4_m2(struct state_mwc60_l4_m2 *state, uint32_t seed)
 {
 	int i;
-	uint64_t x = seed*Z1 + Z7;
-	x = (L59(x) != 0) ? x : Z8;
-	state->c = L59(x);
-	x = x*Z2 + Z3;
-	x = (L60(x) != 0) ? x : Z9;
-	state->s1 = L60(x);
-	x = x*Z3 + Z4;
-	x = (L60(x) != 0) ? x : (Z7 + Z1);
-	state->s2 = L60(x);
-	x = x*Z4 + Z5;
-	x = (L60(x) != 0) ? x : (Z8 + Z2);
-	state->s3 = L60(x);
-	x = x*Z5 + Z6;
-	x = (L60(x) != 0) ? x : (Z9 + Z3);
-	state->s4 = L60(x);
-	for (i=0; i<11; i++)
+	uint32_t z[11];
+	gen_init_state(z, 11, seed);
+	state->s1 = L59((uint64_t)z[3] << 32 | (uint64_t)z[1]);
+	state->s2 = L59((uint64_t)z[4] << 32 | (uint64_t)z[2]);
+	state->s3 = L59((uint64_t)z[7] << 32 | (uint64_t)z[5]);
+	state->s4 = L59((uint64_t)z[8] << 32 | (uint64_t)z[6]);
+	state->c  = L59((uint64_t)z[10] << 32 | (uint64_t)z[9]);
+	for (i=0; i<13; i++)
 		next_mwc60_l4_m2(state);
 }
 
@@ -1176,17 +1078,13 @@ static void init_mwc32_l8_mas_m2(struct state_mwc32_l8_mas_m2 *state,
 								 uint32_t seed)
 {
 	int i;
-	uint32_t x = seed*Z1 + Z7;
-	state->s2 = x;
-	x = x*Z2 + Z3;
-	x = (L30(x) != 0) ? x : Z8;
-	state->c = L30(x);
-	for (i=0; i<8; i++) {
-		x = x*Z4 + Z5;
-		x = (L31(x) != 0) ? x : Z9;
-		state->s1[i] = L31(x);
-	}
-	for (i=0; i<11; i++)
+	uint32_t z[11];
+	gen_init_state(z, 11, seed);
+	state->s2 = z[1];
+	state->c = L31(z[2]);
+	for (i=0; i<8; i++)
+		state->s1[i] = L31(z[i+3]);
+	for (i=0; i<17; i++)
 		next_mwc32_l8_mas_m2(state);
 }
 
@@ -1215,17 +1113,13 @@ static void init_mwc32_l8_mas64(struct state_mwc32_l8_mas64 *state,
 								 uint32_t seed)
 {
 	int i;
-	uint64_t x = seed*Z1 + Z7;
-	state->s2 = x;
-	x = x*Z2 + Z3;
-	x = (L30(x) != 0) ? x : Z8;
-	state->c = L30(x);
-	for (i=0; i<8; i++) {
-		x = x*Z4 + Z5;
-		x = (L31(x) != 0) ? x : Z9;
-		state->s1[i] = L31(x);
-	}
-	for (i=0; i<11; i++)
+	uint32_t z[12];
+	gen_init_state(z, 12, seed);
+	state->s2 = (uint64_t)z[2] << 32 | (uint64_t)z[1];
+	state->c = L31(z[3]);
+	for (i=0; i<8; i++)
+		state->s1[i] = L31(z[i+4]);
+	for (i=0; i<17; i++)
 		next_mwc32_l8_mas64(state);
 }
 
