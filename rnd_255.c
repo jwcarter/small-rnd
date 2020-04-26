@@ -38,6 +38,10 @@
  * For a MWC with base B and lag L, chose multiplier A such that
  * A*B^L-1 and A*B^L/2-1 are both prime for a max period of A*B^L/2-1
  * Using A=~2^32, B=2^32, L=7: Period = A1*(2^32)^7/2-1 = ~2^255
+ *
+ * Pick initial [c,s] such that 0<=c<=A and 0<=x<B and exclude [0,0] and
+ * [A-1,B-1] (See "Random Number Generators" by George Marsaglia in the
+ * Journal of Modern Applied Statistical Methods, May 2003.)
  */
 
 struct rnd {
@@ -68,24 +72,25 @@ static inline uint64_t next_rnd(struct rnd *rnd)
 
 #define Z3 3571494541ULL /* LCG: 91019 * 39239 */
 #define Z4 3753453877ULL /* LCG: 13999 * 268123 */
-#define Z5 18277323205306182053ULL /* LCG: 26777 * 65777 * 78787 * 131711 */
 #define L31(x) ((x)&0x7FFFFFFFUL)
-#define L30(x) ((x)&0x3FFFFFFFUL)
 
 void rnd_init(struct rnd *rnd, unsigned long seed)
 {
-	int i;
-	uint32_t x = seed*Z1 + seed*Z2 + Z3;
-	rnd->n = x % 7;
-	x = x*Z1 + x*Z2 + Z5;
-	x = (L30(x) != 0) ? x : (Z5 + Z1);
-	rnd->c = L30(x);
-	for (i=0; i<7; i++) {
-		x = x*Z4 + x*Z3 + Z2;
-		x = (L31(x) != 0) ? x : (Z5 + Z1);
-		rnd->s[i] = L31(x);
+	int i = 0;
+	uint32_t z[10];
+	uint32_t x = Z4;
+	while (i < 10) {
+		x = ((x + seed) * Z3) + Z4;
+		if (L31(x) != 0) {
+			z[i] = L31(x);
+			i++;
+		}
 	}
-	for (i=0; i<11; i++)
+	rnd->n = z[1] % 7;
+	rnd->c = z[2];
+	for (i=0; i<7; i++)
+		rnd->s[i] = z[i+3];
+	for (i=0; i<17; i++)
 		next_rnd(rnd);
 }
 

@@ -41,9 +41,12 @@
  * Using A=~2^32, B=2^32, L=2
  * P1 = A1*(2^32)^2/2-1 = ~2^95
  * P2 = A2*(2^32)^2/2-1 = ~2^95
- *
  * The two generators have periods that are relatively prime with each
  * other, so the overall period is ~2^95*2^95 = ~2^190
+ *
+ * Pick initial [c,s] such that 0<=c<=A and 0<=x<B and exclude [0,0] and
+ * [A-1,B-1] (See "Random Number Generators" by George Marsaglia in the
+ * Journal of Modern Applied Statistical Methods, May 2003.)
  */
 
 struct rnd {
@@ -76,29 +79,26 @@ static inline uint64_t next_rnd(struct rnd *rnd)
 
 #define Z3 3571494541ULL /* LCG: 91019 * 39239 */
 #define Z4 3753453877ULL /* LCG: 13999 * 268123 */
-#define Z5 18277323205306182053ULL /* LCG: 26777 * 65777 * 78787 * 131711 */
 #define L31(x) ((x)&0x7FFFFFFFUL)
-#define L30(x) ((x)&0x3FFFFFFFUL)
 
 void rnd_init(struct rnd *rnd, unsigned long seed)
 {
-	int i=0;
-	uint64_t x = (Z3 + seed)*Z4 + Z5;
-	uint32_t z[6];
-
-	while (i < 6) {
-		x = (x + seed)*Z3 + Z4;
-		if (L30(x) != 0) {
-			z[i] = x;
+	int i = 0;
+	uint32_t z[7];
+	uint32_t x = Z4;
+	while (i < 7) {
+		x = ((x + seed) * Z3) + Z4;
+		if (L31(x) != 0) {
+			z[i] = L31(x);
 			i++;
 		}
 	}
-	rnd->s1a = L31(z[5]);
-	rnd->s1b = L31(z[4]);
-	rnd->c1  = L30(z[3]);
-	rnd->s2a = L31(z[2]);
-	rnd->s2b = L31(z[1]);
-	rnd->c2  = L30(z[0]);
+	rnd->s1a = z[5];
+	rnd->s1b = z[3];
+	rnd->c1  = z[1];
+	rnd->s2a = z[6];
+	rnd->s2b = z[4];
+	rnd->c2  = z[2];
 	for (i=0; i<13; i++)
 		next_rnd(rnd);
 }

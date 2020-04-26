@@ -41,9 +41,12 @@
  * Using A=~2^32, B=2^32, L=1
  * P1 = A1*2^32/2-1 = ~2^63
  * P2 = A2*2^32/2-1 = ~2^63
- *
  * The two generators have periods that are relatively prime with each
- * other, so the overall period is ~2^63*2^64 = ~2^126
+ * other, so the overall period is ~2^63*2^63 = ~2^126
+ *
+ * Pick initial [c,s] such that 0<=c<=A and 0<=x<B and exclude [0,0] and
+ * [A-1,B-1] (See "Random Number Generators" by George Marsaglia in the
+ * Journal of Modern Applied Statistical Methods, May 2003.)
  */
 
 struct rnd {
@@ -66,21 +69,25 @@ static inline uint64_t next_rnd(struct rnd *rnd)
 	return x1 + FLIP32(x2);
 }
 
-#define Z1 4078645709ULL /* LCG: 77999 * 52291 */
-#define Z2 3580663381ULL /* LCG: 68111 * 52571 */
-#define Z5 18277323205306182053ULL /* LCG: 26777 * 65777 * 78787 * 131711 */
-#define MASK(x) ((x)&0x3FFFFFFF7FFFFFFFULL)
+#define Z3 3571494541ULL /* LCG: 91019 * 39239 */
+#define Z4 3753453877ULL /* LCG: 13999 * 268123 */
+#define L31(x) ((x)&0x7FFFFFFFUL)
 
 void rnd_init(struct rnd *rnd, unsigned long seed)
 {
-	int i;
-	uint64_t x = seed*Z1 + seed*Z2 + Z5 + Z1;
-	x = (MASK(x) != 0) ? x : (Z5 + Z2);
-	rnd->s1 = MASK(x);
-	x = x*Z1 + x*Z2 + Z2;
-	x = (MASK(x) != 0) ? x : (Z5 + Z1);
-	rnd->s2 = MASK(x);
-	for (i=0; i<11; i++)
+	int i = 0;
+	uint32_t z[5];
+	uint32_t x = Z4;
+	while (i < 5) {
+		x = ((x + seed) * Z3) + Z4;
+		if (L31(x) != 0) {
+			z[i] = L31(x);
+			i++;
+		}
+	}
+	rnd->s1 = (uint64_t)z[4] << 32 | (uint64_t)z[2];
+	rnd->s2 = (uint64_t)z[3] << 32 | (uint64_t)z[1];
+	for (i=0; i<13; i++)
 		next_rnd(rnd);
 }
 
