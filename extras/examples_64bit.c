@@ -428,7 +428,7 @@ static inline uint64_t next_mwc32_mas64(void *s)
 {
 	struct state_mwc32_mas64 *state = s;
 	uint64_t x1 = L32(state->s1)*A1A+H32(state->s1);
-	uint64_t x2 = state->s2 + Z6;
+	uint64_t x2 = state->s2 + Z8;
 	state->s1 = x1;
 	state->s2 = x2;
 	return x1 + x2;
@@ -650,7 +650,7 @@ static inline uint64_t next_mwc32_x2_mas64(void *s)
 	struct state_mwc32_x2_mas64 *state = s;
 	uint64_t x1 = L32(state->s1)*A1A+H32(state->s1);
 	uint64_t x2 = L32(state->s2)*A1B+H32(state->s2);
-	uint64_t x3 = state->s3 + Z6;
+	uint64_t x3 = state->s3 + Z8;
 	state->s1 = x1;
 	state->s2 = x2;
 	state->s3 = x3;
