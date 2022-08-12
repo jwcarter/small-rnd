@@ -293,6 +293,55 @@ static void init_mwc32_l2_u2(struct state_mwc32_l2_u2 *state, uint32_t seed)
 		next_mwc32_l2_u2(state);
 }
 
+/* MWC32 L2
+ *
+ * Passes all of the tests of BigCrush for the following 32-bit ranges:
+ *   31-00, 35-04, 39-08, 43-12, 47-16, 48-17, 49-18, 50-19
+ * The following ranges fail the listed tests:
+ *   51-20: 51  SampleProd, t = 16
+ *          55  SampleCorr, k = 1
+ *          56  SampleCorr, k = 2
+ *          65  SumCollector
+ *   52-21: 50  SampleProd, t = 8
+ *          51  SampleProd, t = 16
+ *          52  SampleProd, t = 24
+ *          53  SampleMean, r = 0
+ *          55  SampleCorr, k = 1
+ *          56  SampleCorr, k = 2
+ *          59  WeightDistrib, r = 0
+ *          65  SumCollector
+ *         101  Run of bits, r = 0
+ *
+ * Bits 63-51 are biased.
+*/
+struct state_mwc32_l2 {
+	uint32_t s1;
+	uint32_t s2;
+	uint32_t c;
+};
+
+static inline uint64_t next_mwc32_l2(void *s)
+{
+	struct state_mwc32_l2 *state = s;
+	uint64_t x = state->s1*A2A+state->c;
+	state->s1 = state->s2;
+	state->s2 = x;
+	state->c = H32(x);
+	return x;
+}
+
+static void init_mwc32_l2(struct state_mwc32_l2 *state, uint32_t seed)
+{
+	int i;
+	uint32_t z[4];
+	gen_init_state(z, 4, seed);
+	state->s1 = L31(z[3]);
+	state->s2 = L31(z[2]);
+	state->c  = L31(z[1]);
+	for (i=0; i<11; i++)
+		next_mwc32_l2(state);
+}
+
 /* MWC32 L2 with rotation */
 struct state_mwc32_l2_r {
 	uint32_t s1;
@@ -442,6 +491,57 @@ static void init_mwc32_mas64(struct state_mwc32_mas64 *state, uint32_t seed)
 	state->s2 = (uint64_t)z[4] << 32 | (uint64_t)z[2];
 	for (i=0; i<13; i++)
 		next_mwc32_mas64(state);
+}
+
+/* MWC32 L3
+ *
+ * Passes all of the tests of BigCrush for the following 32-bit ranges:
+ *   31-00, 35-04, 39-08, 43-12, 47-16, 48-17, 49-18, 50-19
+ * The following ranges fail the listed tests:
+ *   51-20: 55  SampleCorr, k = 1
+ *          65  SumCollector
+ *   52-21: 50  SampleProd, t = 8
+ *          51  SampleProd, t = 16
+ *          52  SampleProd, t = 24
+ *          53  SampleMean, r = 0
+ *          55  SampleCorr, k = 1
+ *          56  SampleCorr, k = 2
+ *          59  WeightDistrib, r = 0
+ *          62  WeightDistrib, r = 0
+ *          65  SumCollector
+ *         101  Run of bits, r = 0
+ *
+ * Bits 63-51 are biased.
+ */
+struct state_mwc32_l3 {
+	uint32_t s1;
+	uint32_t s2;
+	uint32_t s3;
+	uint32_t c;
+};
+
+static inline uint64_t next_mwc32_l3(void *s)
+{
+	struct state_mwc32_l3 *state = s;
+	uint64_t x = state->s1*A3A+state->c;
+	state->s1 = state->s2;
+	state->s2 = state->s3;
+	state->s3 = x;
+	state->c = H32(x);
+	return x;
+}
+
+static void init_mwc32_l3(struct state_mwc32_l3 *state, uint32_t seed)
+{
+	int i;
+	uint32_t z[5];
+	gen_init_state(z, 5, seed);
+	state->s1 = L31(z[4]);
+	state->s2 = L31(z[3]);
+	state->s3 = L31(z[2]);
+	state->c  = L31(z[1]);
+	for (i=0; i<13; i++)
+		next_mwc32_l3(state);
 }
 
 /* MWC32 L3 with rotation
@@ -974,6 +1074,52 @@ static void init_mwc32_l7_m2(struct state_mwc32_l7_m2 *state, uint32_t seed)
 		next_mwc32_l7_m2(state);
 }
 
+/* MWC32 L8
+ *
+ * Passes all of the tests of BigCrush for the following 32-bit ranges:
+ *   31-00, 35-04, 39-08, 43-12, 47-16, 48-17, 49-18, 50-19
+ * The following ranges fail the listed tests:
+ *   51-20: 65  SumCollector
+ *   52-21: 34  Gap, r = 0
+ *          51  SampleProd, t = 16
+ *          52  SampleProd, t = 24
+ *          55  SampleCorr, k = 1
+ *          62  WeightDistrib, r = 0
+ *          65  SumCollector
+ *         101  Run of bits, r = 0
+ *
+ * Bits 63-51 are biased.
+ */
+struct state_mwc32_l8 {
+	uint8_t n;
+	uint32_t c;
+	uint32_t s[8];
+};
+
+static inline uint64_t next_mwc32_l8(void *s)
+{
+	struct state_mwc32_l8 *state = s;
+	uint8_t n = 0x7&state->n;
+	uint64_t x = state->s[n]*A8A+state->c;
+	state->s[n] = x;
+	state->c = H32(x);
+	state->n++;
+	return x;
+}
+
+static void init_mwc32_l8(struct state_mwc32_l8 *state, uint32_t seed)
+{
+	int i;
+	uint32_t z[11];
+	gen_init_state(z, 11, seed);
+	state->n = z[1] & 0x7;
+	state->c = L31(z[2]);
+	for (i=0; i<8; i++)
+		state->s[i] = L31(z[i+3]);
+	for (i=0; i<17; i++)
+		next_mwc32_l8(state);
+}
+
 /* MWC32 L8 M2
  */
 struct state_mwc32_l8_m2 {
@@ -1188,11 +1334,13 @@ int main (void)
 	TEST_GEN(smix64, "SMIX64", 64);
 	TEST_GEN(xorshift64, "XORShift64", 64);
 	TEST_GEN(mwc32_l2_u2, "MWC32 L2 U2", 94);
-	TEST_GEN(mwc32_l2_m2, "MWC32 L2 R", 95);
+	TEST_GEN(mwc32_l2, "MWC32 L2", 95);
+	TEST_GEN(mwc32_l2_r, "MWC32 L2 R", 95);
 	TEST_GEN(mwc32_l2_m2, "MWC32 L2 *2", 95);
 	TEST_GEN(mwc32_x2, "MWC32 X2", 126);
 	TEST_GEN(mwc32_x2_m2, "MWC32 X2 *2", 126);
 	TEST_GEN(mwc32_mas64, "MWC32 MAS64", 127);
+	TEST_GEN(mwc32_l3, "MWC32 L3", 127);
 	TEST_GEN(mwc32_l3_r, "MWC32 L3 R", 127);
 	TEST_GEN(mwc32_l3_m2, "MWC32 L3 *2", 127);
 	TEST_GEN(xorshift128p, "XORShift128+", 128);
@@ -1207,6 +1355,7 @@ int main (void)
 	TEST_GEN(mwc32_l3_x2, "MWC32 L3 X2", 254);
 	TEST_GEN(mwc32_l3_x2_m2, "MWC32 L3 X2 *2", 254);
 	TEST_GEN(mwc32_l7_m2, "MWC32 L7 *2", 255);
+	TEST_GEN(mwc32_l8, "MWC32 L8", 287);
 	TEST_GEN(mwc32_l8_m2, "MWC32 L8 *2", 287);
 	TEST_GEN(mwc60_l4_m2, "MWC60 L4 *2", 299);
 	TEST_GEN(mwc32_l8_mas_m2, "MWC32 L8 MAS *2", 319);
