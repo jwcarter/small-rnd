@@ -155,8 +155,15 @@ static void init_mwc32_m2_32(struct state_mwc32_m2_32 *state,
 }
 
 /* MWC32 M2 - 64-bit state variables
- * Passes all of the tests of BigCrush.
- * Four 32-bit ranges tested: 64-33, 48-17, 32-1, and 16-49
+ * rnd_63
+ * Passes all of the tests of BigCrush for the following 32-bit ranges:
+ *   03-36, 07-40, 11-44, 15-48, 19-52, 23-56, 31-00, 35-04, 39-08, 47-16,
+ *   51-20, 59-28, 63-32
+ * The following ranges fail the listed tests:
+ *   27-60: 14  BirthdaySpacings, t = 3
+ *   43-12: 13  BirthdaySpacings, t = 2
+ *          15  BirthdaySpacings, t = 4
+ *   55-24: 13  BirthdaySpacings, t = 2
  */
 struct state_mwc32_m2_64 {
 	uint64_t s1;
@@ -371,7 +378,13 @@ static void init_mwc32_l2_r(struct state_mwc32_l2_r *state, uint32_t seed)
 		next_mwc32_l2_r(state);
 }
 
-/* MWC32 L2 with multiplication */
+/* MWC32 L2 with multiplication
+ * rnd_95
+ * Passes all of the tests of BigCrush for the following 32-bit ranges:
+ *   03-36, 07-40, 11-44, 15-48, 19-52, 23-56, 27-60, 31-00, 35-04, 39-08,
+ *   43-12, 47-16, 51-20, 55-24, 59-28, 63-32
+ * No ranges failed any of the BigCrush tests.
+ */
 struct state_mwc32_l2_m2 {
 	uint32_t s1;
 	uint32_t s2;
@@ -402,7 +415,13 @@ static void init_mwc32_l2_m2(struct state_mwc32_l2_m2 *state, uint32_t seed)
 		next_mwc32_l2_m2(state);
 }
 
-/* MWC32 x2 */
+/* MWC32 x2
+ * rnd_126
+ * Passes all of the tests of BigCrush for the following 32-bit ranges:
+ *   03-36, 07-40, 11-44, 15-48, 19-52, 23-56, 27-60, 31-00, 35-04, 39-08,
+ *   43-12, 47-16, 51-20, 55-24, 59-28, 63-32
+ * No ranges failed any of the BigCrush tests.
+*/
 struct state_mwc32_x2 {
 	uint64_t s1;
 	uint64_t s2;
@@ -579,7 +598,13 @@ static void init_mwc32_l3_r(struct state_mwc32_l3_r *state, uint32_t seed)
 		next_mwc32_l3_r(state);
 }
 
-/* MWC32 L3 M2 */
+/* MWC32 L3 M2
+ * rnd_127
+ * Passes all of the tests of BigCrush for the following 32-bit ranges:
+ *   03-36, 07-40, 11-44, 15-48, 19-52, 23-56, 27-60, 31-00, 35-04, 39-08,
+ *   43-12, 47-16, 51-20, 55-24, 59-28, 63-32
+ * No ranges failed any of the BigCrush tests.
+ */
 struct state_mwc32_l3_m2 {
 	uint32_t s1;
 	uint32_t s2;
@@ -750,7 +775,13 @@ static void init_mwc32_x2_mas64(struct state_mwc32_x2_mas64 *state,
 		next_mwc32_x2_mas64(state);
 }
 
-/* MWC32 L2 X2 */
+/* MWC32 L2 X2
+ * rnd_190
+ * Passes all of the tests of BigCrush for the following 32-bit ranges:
+ *   03-36, 07-40, 11-44, 15-48, 19-52, 23-56, 27-60, 31-00, 35-04, 39-08,
+ *   43-12, 47-16, 51-20, 55-24, 59-28, 63-32
+ * No ranges failed any of the BigCrush tests.
+ */
 struct state_mwc32_l2_x2 {
 	uint32_t s1a;
 	uint32_t s1b;
@@ -944,7 +975,13 @@ static void init_mwc32_x4(struct state_mwc32_x4 *state, uint32_t seed)
 		next_mwc32_x4(state);
 }
 
-/* MWC32 L3 X2 */
+/* MWC32 L3 X2
+ * rnd_254
+ * Passes all of the tests of BigCrush for the following 32-bit ranges:
+ *   03-36, 07-40, 11-44, 15-48, 19-52, 23-56, 27-60, 31-00, 35-04, 39-08,
+ *   43-12, 47-16, 51-20, 55-24, 59-28, 63-32
+ * No ranges failed any of the BigCrush tests.
+*/
 struct state_mwc32_l3_x2 {
 	uint32_t s1a;
 	uint32_t s1b;
@@ -1038,6 +1075,7 @@ static void init_mwc32_l3_x2_m2(struct state_mwc32_l3_x2_m2 *state,
 }
 
 /* MWC32 L7 M2
+ * rnd_255
  * Passes all of the tests of BigCrush.
  * Four 32-bit ranges tested: 64-33, 48-17, 32-1, and 16-49
  */
@@ -1121,6 +1159,11 @@ static void init_mwc32_l8(struct state_mwc32_l8 *state, uint32_t seed)
 }
 
 /* MWC32 L8 M2
+ * rnd_287
+ * Passes all of the tests of BigCrush for the following 32-bit ranges:
+ *   03-36, 07-40, 11-44, 15-48, 19-52, 23-56, 27-60, 31-00, 35-04, 39-08,
+ *   43-12, 47-16, 51-20, 55-24, 59-28, 63-32
+ * No ranges failed any of the BigCrush tests.
  */
 struct state_mwc32_l8_m2 {
 	uint8_t n;
