@@ -66,8 +66,12 @@ void test_bit_cur_to_cur(rnd_t rnd, unsigned bits)
 
 	for (i=0; i<bits-1; i++) {
 		for (j=i+1; j<bits; j++) {
-			double r = (double)(res_count[i][j] - e)/sd;
-			if (r > 4.0 || r < -4.0) {
+			double sn = 2.0*((double)res_count[i][j] - e);
+			if (sn < 0) -sn;
+			double pv = erfc(sn/sqrt((double)(2*num_rnds)));
+
+			double r = (double)(res_count[i][j] - e)/sd;			
+			if (r > 4.0 || r < -4.0 || pv < 0.0001) {
 				if (!found) {
 					printf(" Bit  Bit  Dist   SD\n");
 					found = 1;
@@ -76,7 +80,7 @@ void test_bit_cur_to_cur(rnd_t rnd, unsigned bits)
 				if (d < 0) d = -d;
 				if (d*2 > bits) d -= bits;
 				if (d < 0) d = -d;
-				printf("%4d %4d  (%2d) %5.1f\n",i+1,j+1,d,r);
+				printf("%4d %4d  (%2d) %5.1f p-val=%.6e Sn=%.0f count=%lu\n",i+1,j+1,d,r,pv,sn, res_count[i][j]);
 			}
 		}
 	}

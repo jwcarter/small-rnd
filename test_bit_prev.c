@@ -71,17 +71,21 @@ void test_bit_cur_to_prev(rnd_t rnd, unsigned bits)
 
 	for (i=0; i<bits; i++) {
 		for (j=0; j<bits; j++) {
+			double sn = 2.0*((double)res_count[i][j] - e);
+			if (sn < 0) sn = -sn;
+			double pv = erfc(sn/sqrt((double)(2*num_rnds)));
+			if (pv < 1.0e-99) pv = 0.0;
 			double r = (double)(res_count[i][j] - e)/sd;
 			if (r > 4.0 || r < -4.0) {
 				if (!found) {
-					printf(" Cur Prev  Dist   SD\n");
+					printf(" Cur Prev  Dist    SD      p-val\n");
 					found = 1;
 				}
 				d = i-j;
 				if (d < 0) d = -d;
 				if (d*2 > bits) d -= bits;
 				if (d < 0) d = -d;
-				printf("%4d %4d  (%2d) %5.1f\n",i+1,j+1,d,r);
+				printf("%4d %4d  (%2d) %6.1f %11.3e\n",i+1,j+1,d,r,pv);
 			}
 		}
 	}
