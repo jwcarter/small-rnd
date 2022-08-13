@@ -1,0 +1,12 @@
+extras/examples_64bit
+extras/rnd_bit_tests
+extras/rnd_dice_test
+extras/test_birthday
+extras/test_bit_cur
+extras/test_bit_dist
+extras/test_bit_prev
+rnd_bit_tests
+rnd_dice_test
+rnd_test
+test_birthday
+
