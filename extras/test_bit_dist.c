@@ -156,7 +156,7 @@ void test_bit_distribution(rnd_t rnd, unsigned bits)
 	printf("%3s %5s %5s %5s %5s\n", "bit","+ ","<1 ","<2 ","<3");
 
 	for (i=0; i<bits; i++) {
-		printf("%2d: %5.1f %5.1f %5.1f %5.1f\n", i+1,
+		printf("%2d: %5.1f %5.1f %5.1f %5.1f\n", i,
 			   sd_sd[i][0], sd_sd[i][1], sd_sd[i][2], sd_sd[i][3]);
 	}
 	printf("%2s: %5.1f %5.1f %5.1f %5.1f\n", "T",
@@ -164,7 +164,7 @@ void test_bit_distribution(rnd_t rnd, unsigned bits)
 
 }
 
-/* gcc -O1 -o test_bit_dist -lm rnd_127.c rnd.c test_bit_dist.c */
+/* gcc -O1 -o test_bit_dist -lm bad_lcg64.c test_bit_dist.c */
 int main (int argc, char **argv)
 {
 	rnd_t rnd;

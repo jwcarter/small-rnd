@@ -80,7 +80,7 @@ void test_bit_cur_to_cur(rnd_t rnd, unsigned bits)
 				if (d < 0) d = -d;
 				if (d*2 > bits) d -= bits;
 				if (d < 0) d = -d;
-				printf("%4d %4d  (%2d) %5.1f p-val=%.6e Sn=%.0f count=%lu\n",i+1,j+1,d,r,pv,sn, res_count[i][j]);
+				printf("%4d %4d  (%2d) %5.1f p-val=%.6e Sn=%.0f count=%lu\n",i,j,d,r,pv,sn, res_count[i][j]);
 			}
 		}
 	}
@@ -89,7 +89,7 @@ void test_bit_cur_to_cur(rnd_t rnd, unsigned bits)
 	}
 }
 
-/* gcc -O1 -o test_bit_cur -lm rnd_127.c rnd.c test_bit_cur.c */
+/* gcc -O1 -o test_bit_cur -lm -I../ bad_lcg64.c test_bit_cur.c */
 int main (int argc, char **argv)
 {
 	rnd_t rnd;
