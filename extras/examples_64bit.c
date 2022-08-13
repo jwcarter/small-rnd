@@ -97,11 +97,81 @@ static void gen_init_state(uint32_t s[], unsigned num, uint32_t seed)
 }
 
 
+/* MWC32
+ * bad_mwc32
+ *
+ * test_birthday results:
+ * Bits used: 16  t: 4
+ *   Left 43          : p-value > 1-1e-15
+ *   Left 57, 36, 33  : p-value > 1-1e-06
+ *
+ * rnd_bit_tests results:
+ * 2^14 trials
+ *   Bits 52-20, 53-21, 54-22, 55-23, 56-24, 57-25,
+ *        58-26, 59-27, 60-28, 61-29, 62-30, 63-31   : p-value > 1-1e-15
+ *   Bits 51-19                                      : p-value < 1e-15
+ *   Bits 50-18                                      : p-value < 1e-12
+ *   Test aborts due to the number of failures
+ *
+ * rnd_dice_tests results:
+ * 2^27 trials
+ *   Horizontal Bits 60-64                           : p-value < 1e-15
+ *   Horizontal Bits 52-56, 56-60                    : p-value < 1e-12
+ * 2^28 trials
+ *   Horizontal Bits 52-56, 56-60                    : p-value < 1e-15
+ * 2^30 trials
+ *   Vertical Bits 54                                : p-value < 1e-12
+ *   Vertical BIts 55-63                             : p-value < 1e-06
+ * 2^31 trials
+ *   Vertical Bits 54-55, 58-59, 61-63               : p-value < 1e-15
+ *   Vertical Bits 56, 60                            : p-value < 1e-12
+ *   Vertical Bits 52, 53, 57                        : p-value < 1e-09
+ *   Test aborts due to the number of failures
+ *
+ * test_bit_prev results:
+ *   47-15, 48-16, 49-17, 50-18, 51-19, 52-20,
+ *   53-21, 54-22, 55-23, 56-24, 57-25, 58-26,
+ *   59-27, 60-28, 61-29, 62-30, 63-31          : p-value < 1e-15
+ */
+struct state_mwc32 {
+	uint64_t s1;
+};
+
+static inline uint64_t next_mwc32(void *s)
+{
+	struct state_mwc32 *state = s;
+	uint64_t x = L32(state->s1)*A1A+H32(state->s1);
+	state->s1 = x;
+	return x + RR64(x,25);
+}
+
+static void init_mwc32(struct state_mwc32 *state, uint32_t seed)
+{
+	int i;
+	uint32_t z[3];
+	gen_init_state(z, 3, seed);
+	state->s1 = (uint64_t)L31(z[2]) << 32 | (uint64_t)L31(z[1]);
+	for (i=0; i<13; i++)
+		next_mwc32(state);
+}
+		
 /* MWC32 with rotation
  * Regularly, but not always, fails BigCrush #15 BirthdaySpacings, t = 4
  * for the 32-bit range 48-17
  * Passes all of the tests for BigCrush for the 32-bit ranges:
  * 64-33, 32-1, and 16-49
+ *
+ * test_birthday results:
+ * Bits used: 64  t: 1
+ *   Left 63-0                      : p-value > 1-1e-15
+ * Bits used: 32  t: 2
+ *   Left 51, 45, 39-38, 31, 11, 8  : p-value > 1-1e-15
+ *   Left 23, 7, 1                  : p-value > 1-1e-12
+ *   Left 9                         : p-value > 1-1e-06
+ * Bits used: 16  t: 4
+ *   Left 46                        : p-value > 1-1e-15
+ *   Left 63                        : p-value > 1-1e-12
+ *   Left 19, 0                     : p-value > 1-1e-09
  */
 struct state_mwc32_r {
 	uint64_t s1;
@@ -125,7 +195,10 @@ static void init_mwc32_r(struct state_mwc32_r *state, uint32_t seed)
 		next_mwc32_r(state);
 }
 				
-/* MWC32 M2 - 32-bit state variables */
+/* MWC32 M2 - 32-bit state variables
+ * Functionally the same as the 64-bit state variable below
+ * and has all the same problems.
+*/
 struct state_mwc32_m2_32 {
 	uint32_t s1;
 	uint32_t c;
@@ -164,6 +237,15 @@ static void init_mwc32_m2_32(struct state_mwc32_m2_32 *state,
  *   43-12: 13  BirthdaySpacings, t = 2
  *          15  BirthdaySpacings, t = 4
  *   55-24: 13  BirthdaySpacings, t = 2
+ *
+ * test_birthday results:
+ * Bits used: 32  t: 2
+ *   Left 57-55, 52, 48, 44-43, 33-32, 22, 17  : p-value > 1-1e-15
+ *   Left 63-62, 42                            : p-value > 1-1e-09
+ *   Left 54                                   : p-value > 1-1e-06
+ * Bits used: 16  t: 4
+ *   Left 38, 29, 19, 18                       : p-value > 1-1e-15
+ *   Left 39                                   : p-value > 1-1e-12
  */
 struct state_mwc32_m2_64 {
 	uint64_t s1;
@@ -190,7 +272,51 @@ static void init_mwc32_m2_64(struct state_mwc32_m2_64 *state,
 		next_mwc32_m2_64(state);
 }
 
-/* LCG 64 */
+/* LCG 64
+ * Criteria for LCGs:
+ *  2^64 and C10 are relatively prime
+ *  A10 - 1 is divisible by 2 (the prime factor of 2^64)
+ *  A10 - 1 is divisible by 4 (since 2^64 is divisible by 4)
+ *  A10 % 8 = 5 (A10 not divisible by 8)
+ *
+ * test_birthday results:
+ * Bits used: 64:  t: 1
+ *   Left 26, 17-9, 7-5  : p-value > 1-1e-15
+ *   Left 4              : p-value > 1-1e-12
+ *   Left 8              : p-value > 1-1e-09
+ *   Left 24-18          : p-value < 1e-15
+ * Bits used: 32  t: 2
+ *   Left 63-0           : p-value > 1-1e-15
+ * Bits used: 16  t: 4
+ *   Left 63-0           : p-value > 1-1e-15
+ *
+ * rnd_bit_tests results:
+ * 2^14 trials
+ *   Bit-to-Prev-Bit 03-03                       : p-value > 1-1e-15
+ *   Bit-to-Prev-Bit 00-00, 02-02, 04-04, 05-05  : p-value < 1e-15
+ * 2^15 trials
+ *   Bit-to-Prev-Bit 06-06                       : p-value < 1e-06
+ * 2^16 trials
+ *   Bit-to-Prev-Bit 06-06                       : p-value < 1e-15
+ *   Bit-to-Prev-Bit 08-08                       : p-value < 1e-09
+ * 2^17 trials
+ *   Bit-to-Prev-Bit 08-08                       : p-value < 1e-15
+ *   Bit-to-Prev-Bit 07-07                       : p-value < 1e-06
+ *   Test aborts due to the number of failures
+ *
+ * rnd_dice_tests results:
+ * 2^14 trials
+ *   Vertical Bits 00-09  : p-value < 1e-15
+ *   Vertical Bits 13     : p-value > 1-1e-09
+ *   Test aborts due to the number of failures
+ *
+ * test_bit_prev results:
+ *   0-0, 2-2, 3-3, 4-4, 5-5, 6-6, 7-7, 8-8, 9-9  : p-value < 1e-15
+ *   10-10                                        : p-value < 1e-09
+ *
+ * test_bit_dist results:
+ *   Bits 00-27 have bad distributions
+ */
 struct state_lcg64 {
   uint64_t s;
 };
@@ -242,7 +368,26 @@ static void init_smix64(struct state_smix64 *state, uint32_t seed)
 		next_smix64(state);
 }
 
-/* XORShift64 */
+/* XORShift64
+ * Values come from "Xorshift RNGs" by George Marsaglia in the Journal
+ * of Statistical Software, 2003.
+ *
+ * test_birthday results:
+ * Bits used: 32  t: 2
+ *   Left 59-9, 3-1          : p-value > 1-1e-15
+ *   Left 60                 : p-value > 1-1e-09
+ * Bits used: 16  t: 4
+ *   Left 61-55, 47-18, 13-1 : p-value > 1-1e-15
+ *   Left 14                 : p-value > 1-1e-06
+ *
+ * rnd_bit_tests results:
+ * 2^30 trials: no problems
+ *
+ * rnd_dice_tests results:
+ * 2^33 trials: no problems
+ *
+ * test_bit_dist results: no problems
+ */
 struct state_xorshift64 {
 	uint64_t s1;
 };
@@ -1370,6 +1515,7 @@ int main (void)
 	printf("%25s %6s %5s %9s\n", "Test", "Period", "t-d", "t/d");
 
 
+	TEST_GEN(mwc32, "MWC32", 63);
 	TEST_GEN(mwc32_r, "MWC32 R", 63);
 	TEST_GEN(mwc32_m2_32, "MWC32 *2 (32)", 63);
 	TEST_GEN(mwc32_m2_64, "MWC32 *2 (64)", 63);
