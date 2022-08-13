@@ -29,6 +29,15 @@
  * with 32-bit numbers, rotating one of the products by 32-bits
  * and adding with the other product.
  *
+ * Criteria for MWCs:
+ * For a MWC with base B and lag L, chose multiplier A such that
+ * A*B^L-1 and A*B^L/2-1 are both prime for a max period of A*B^L/2-1
+ * Using A=~2^32, B=2^32, L=1: Period = A1*2^32/2-1 = ~2^63
+ *
+ * Pick initial [c,s] such that 0<=c<=A and 0<=x<B and exclude [0,0] and
+ * [A-1,B-1] (See "Random Number Generators" by George Marsaglia in the
+ * Journal of Modern Applied Statistical Methods, May 2003.)
+ *
  * Tested with the TestU01 library from
  * http://www.iro.umontreal.ca/~simardr/testu01/tu01.html
  * Passes all of the tests of BigCrush for the following 32-bit ranges:
@@ -40,14 +49,14 @@
  *          15  BirthdaySpacings, t = 4
  *   55-24: 13  BirthdaySpacings, t = 2
  *
- * Criteria for MWCs:
- * For a MWC with base B and lag L, chose multiplier A such that
- * A*B^L-1 and A*B^L/2-1 are both prime for a max period of A*B^L/2-1
- * Using A=~2^32, B=2^32, L=1: Period = A1*2^32/2-1 = ~2^63
- *
- * Pick initial [c,s] such that 0<=c<=A and 0<=x<B and exclude [0,0] and
- * [A-1,B-1] (See "Random Number Generators" by George Marsaglia in the
- * Journal of Modern Applied Statistical Methods, May 2003.)
+ * test_birthday results:
+ * Bits used: 32  t: 2
+ *   Left 57-55, 52, 48, 44-43, 33-32, 22, 17  : p-value > 1-1e-15
+ *   Left 63-62, 42                            : p-value > 1-1e-09
+ *   Left 54                                   : p-value > 1-1e-06
+ * Bits used: 16  t: 4
+ *   Left 38, 29, 19, 18                       : p-value > 1-1e-15
+ *   Left 39                                   : p-value > 1-1e-12
  */
 
 struct rnd {
@@ -136,3 +145,11 @@ double rnd_open(struct rnd *rnd)
 	/* Return double (0,1) in continuous uniform distribution */
 	return OPEN(next_rnd(rnd));
 }
+
+/*
+
+gcc -O1 -lm -o rnd_bit_tests rnd.c rnd_63.c rnd_bit_tests.c
+gcc -O1 -lm -o rnd_dice_test rnd.c rnd_63.c rnd_dice_test.c
+gcc -O1 -lm -I/home/jim/projects/rnd/ -o test_birthday rnd.c rnd_63.c extras/test_birthday.c
+
+*/

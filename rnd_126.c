@@ -28,13 +28,6 @@
  * generators are added together after rotating the second output by
  * 32-bits.
  *
- * Tested with the TestU01 library from
- * http://www.iro.umontreal.ca/~simardr/testu01/tu01.html
- * Passes all of the tests of BigCrush for the following 32-bit ranges:
- *   03-36, 07-40, 11-44, 15-48, 19-52, 23-56, 27-60, 31-00, 35-04, 39-08,
- *   43-12, 47-16, 51-20, 55-24, 59-28, 63-32
- * No ranges failed any of the BigCrush tests.
- *
  * Criteria for MWCs:
  * For a MWC with base B and lag L, chose multiplier A such that
  * A*B^L-1 and A*B^L/2-1 are both prime for a max period of A*B^L/2-1
@@ -47,6 +40,13 @@
  * Pick initial [c,s] such that 0<=c<=A and 0<=x<B and exclude [0,0] and
  * [A-1,B-1] (See "Random Number Generators" by George Marsaglia in the
  * Journal of Modern Applied Statistical Methods, May 2003.)
+ *
+ * Tested with the TestU01 library from
+ * http://www.iro.umontreal.ca/~simardr/testu01/tu01.html
+ * Passes all of the tests of BigCrush for the following 32-bit ranges:
+ *   03-36, 07-40, 11-44, 15-48, 19-52, 23-56, 27-60, 31-00, 35-04, 39-08,
+ *   43-12, 47-16, 51-20, 55-24, 59-28, 63-32
+ * No ranges failed any of the BigCrush tests.
  */
 
 struct rnd {

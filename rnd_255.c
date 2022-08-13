@@ -29,11 +29,6 @@
  * with 32-bit numbers, rotating one of the products by 32-bits
  * and adding with the other product.
  *
- * Tested with the TestU01 library from
- * http://www.iro.umontreal.ca/~simardr/testu01/tu01.html
- * Passes all of the tests of BigCrush.
- * Four 32-bit ranges tested: 64-33, 48-17, 32-1, and 16-49
- *
  * Criteria for MWCs:
  * For a MWC with base B and lag L, chose multiplier A such that
  * A*B^L-1 and A*B^L/2-1 are both prime for a max period of A*B^L/2-1
@@ -42,6 +37,11 @@
  * Pick initial [c,s] such that 0<=c<=A and 0<=x<B and exclude [0,0] and
  * [A-1,B-1] (See "Random Number Generators" by George Marsaglia in the
  * Journal of Modern Applied Statistical Methods, May 2003.)
+ *
+ * Tested with the TestU01 library from
+ * http://www.iro.umontreal.ca/~simardr/testu01/tu01.html
+ * Passes all of the tests of BigCrush.
+ * Four 32-bit ranges tested: 64-33, 48-17, 32-1, and 16-49
  */
 
 struct rnd {
