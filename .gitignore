@@ -1,6 +1,6 @@
 extras/examples_64bit
 extras/rnd_bit_tests
-extras/rnd_dice_test
+extras/rnd_dice_tests
 extras/test_birthday
 extras/test_bit_cur
 extras/test_bit_dist
