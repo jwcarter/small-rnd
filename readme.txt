@@ -8,6 +8,10 @@ GOALS
 3) Pass most, if not all, tests of Bigcrush
 4) Speed comparable with the glibc generator [Not too slow]
 
+IN MOST CASES YOU WOULD BE BETTER OF WITH A CRYPTOGRAPHICALLY SECURE
+PRNG. IF IN DOUBT, USE A CRYPTOGRAPHICALLY SECURE PRNG FROM A TRUSTED
+CRYPTO LIBRARY.
+
 ======================================================================
 Description
 ======================================================================
