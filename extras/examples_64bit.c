@@ -1457,6 +1457,87 @@ static void init_mwc32_l8_mas64(struct state_mwc32_l8_mas64 *state,
 		next_mwc32_l8_mas64(state);
 }
 
+/* Speck
+ * Based on Speck in counter mode with half the rounds
+ * Keep the modified keys at the end of the fill (Is this ok to do?)
+ * The counter has a period of 2^128
+ */
+#define SPECK_DATA 4 /* I would have thought more would be faster, but it is not */
+struct state_speck {
+	uint64_t k1;
+	uint64_t k2;
+	uint64_t c1;
+	uint64_t c2;
+	uint64_t r[SPECK_DATA];
+	unsigned i;
+};
+
+#define SPECKR(x, y, k) (x = RR64(x, 8), x += y, x ^= k, y = RL64(y, 3), y ^= x)
+#define SPECK_ROUNDS 16
+static inline void fill_speck(struct state_speck *state)
+{
+	uint64_t k1 = state->k1;
+	uint64_t k2 = state->k2;
+	uint64_t c1 = state->c1;
+	uint64_t c2 = state->c2;
+	uint64_t p1 = c1;
+	uint64_t p2 = c2;
+
+	int i,j;
+
+	for (i=0; i < SPECK_DATA; i += 2) {
+		SPECKR(p2, p1, k1);
+		for (j = 0; j < SPECK_ROUNDS-1; j++) {
+			SPECKR(k2, k1, j);
+			SPECKR(p2, p1, k1);
+		}
+		state->r[i] = p1;
+		state->r[i+1] = p2;
+		c1++;
+		if (c1 == 0)
+			c2++;
+		p1 = c1;
+		p2 = c2;
+	}
+	state->k1 = k1;
+	state->k2 = k2;
+	state->c1 = c1;
+	state->c2 = c2;
+}
+
+static inline uint64_t next_speck(void *s)
+{
+	struct state_speck *state = s;
+	unsigned i = state->i;
+	uint64_t x;
+
+	if (i >= SPECK_DATA) {
+		fill_speck(state);
+		state->i = 0;
+		i = 0;
+	}
+
+	x = state->r[i];
+	state->i++;
+
+	return x;
+}
+
+static void init_speck(struct state_speck *state, uint32_t seed)
+{
+	int i;
+	uint32_t z[12];
+	gen_init_state(z, 12, seed);
+	state->c2 = (uint64_t)z[2] << 32 | (uint64_t)z[1];
+	state->c1 = (uint64_t)z[5] << 32 | (uint64_t)z[4];
+	state->k2 = (uint64_t)z[8] << 32 | (uint64_t)z[7];
+	state->k1 = (uint64_t)z[11] << 32 | (uint64_t)z[10];
+	state->i = SPECK_DATA;
+
+	for (i=0; i<SPECK_DATA+1; i++)
+		next_speck(state);
+}
+
 /* DUMMY */
 struct state_dummy {
 	uint64_t s;
@@ -1549,6 +1630,7 @@ int main (void)
 	TEST_GEN(mwc60_l4_m2, "MWC60 L4 *2", 299);
 	TEST_GEN(mwc32_l8_mas_m2, "MWC32 L8 MAS *2", 319);
 	TEST_GEN(mwc32_l8_mas64, "MWC32 L8 MAS64", 351);
+	TEST_GEN(speck, "SPECK", 128);
 
 	printf("\ntotal = %llu (So compiler won't optimize away the loops)\n",
 	       grand_total);
