@@ -1219,6 +1219,81 @@ static void init_mwc32_l3_x2_m2(struct state_mwc32_l3_x2_m2 *state,
 		next_mwc32_l3_x2_m2(state);
 }
 
+/* MWC32 L7
+ */
+struct state_mwc32_l7 {
+	uint8_t n;
+	uint32_t c;
+	uint32_t s[7];
+};
+
+const uint8_t mwc_next7[7] = {1, 2, 3, 4, 5, 6, 0};
+static inline uint64_t next_mwc32_l7(void *s)
+{
+	struct state_mwc32_l7 *state = s;
+	uint8_t n = state->n;
+	uint64_t x = state->s[n]*A7A+state->c;
+	state->s[n] = x;
+	state->c = H32(x);
+	state->n = mwc_next7[n];
+	return x;
+}
+
+static void init_mwc32_l7(struct state_mwc32_l7 *state, uint32_t seed)
+{
+	int i;
+	uint32_t z[10];
+	gen_init_state(z, 10, seed);
+	state->n = z[1] % 7;
+	state->c = L31(z[2]);
+	for (i=0; i<7; i++)
+		state->s[i] = L31(z[i+3]);
+	for (i=0; i<17; i++)
+		next_mwc32_l7(state);
+}
+
+/* MWC32 L7 PTR
+ */
+struct uint32_data {
+	uint32_t s;
+	struct uint32_data *next;
+};
+
+struct state_mwc32_l7_ptr {
+	uint32_t c;
+	struct uint32_data *p;
+	struct uint32_data d[7];
+};
+
+static inline uint64_t next_mwc32_l7_ptr(void *s)
+{
+	struct state_mwc32_l7_ptr *state = s;
+	uint64_t x = state->p->s*A7A+state->c;
+	state->p->s = x;
+	state->c = H32(x);
+	state->p = state->p->next;
+	return x;
+}
+
+static void init_mwc32_l7_ptr(struct state_mwc32_l7_ptr *state, uint32_t seed)
+{
+	int i;
+	uint32_t z[10];
+	gen_init_state(z, 10, seed);
+
+	state->p = &state->d[0];
+	state->c = L31(z[2]);
+	for (i=0; i<6; i++) {
+		state->d[i].s = L31(z[i+3]);
+		state->d[i].next = &state->d[i+1];
+	}
+	state->d[6].s = L31(z[9]);
+	state->d[6].next = &state->d[0];
+
+	for (i=0; i<17; i++)
+		next_mwc32_l7_ptr(state);
+}
+
 /* MWC32 L7 M2
  * rnd_255
  * Passes all of the tests of BigCrush.
@@ -1624,6 +1699,8 @@ int main (void)
 	TEST_GEN(mwc32_x4, "MWC32 X4", 252);
 	TEST_GEN(mwc32_l3_x2, "MWC32 L3 X2", 254);
 	TEST_GEN(mwc32_l3_x2_m2, "MWC32 L3 X2 *2", 254);
+	TEST_GEN(mwc32_l7, "MWC32 L7", 255);
+	TEST_GEN(mwc32_l7_ptr, "MWC32 L7 PTR", 255);
 	TEST_GEN(mwc32_l7_m2, "MWC32 L7 *2", 255);
 	TEST_GEN(mwc32_l8, "MWC32 L8", 287);
 	TEST_GEN(mwc32_l8_m2, "MWC32 L8 *2", 287);
